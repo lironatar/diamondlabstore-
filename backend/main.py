@@ -47,6 +47,9 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 frontend_build_dir = Path("../frontend/build")
 if frontend_build_dir.exists():
     app.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
+    # Mount React build root files (images, favicon, etc.) to serve from root path
+    # This serves files like /Background-White.png, /favicon.ico, /logo192.png, etc.
+    app.mount("/assets", StaticFiles(directory="../frontend/build", html=False), name="assets")
 
 # Dependency
 def get_db():
@@ -483,6 +486,24 @@ async def upload_file(
     # Return file URL
     file_url = f"/uploads/{unique_filename}"
     return {"url": file_url, "filename": unique_filename}
+
+# Route to serve React build files (images, favicon, etc.) from root path
+@app.get("/{filename}")
+async def serve_build_files(filename: str):
+    """Serve React build files like Background-White.png, favicon.ico, etc."""
+    # Only serve specific file types to avoid conflicts
+    allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.json', '.xml', '.txt'}
+    file_extension = os.path.splitext(filename)[1].lower()
+    
+    if file_extension in allowed_extensions:
+        frontend_build_dir = Path("../frontend/build")
+        file_path = frontend_build_dir / filename
+        
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(file_path)
+    
+    # If not a build file, fall through to the catch-all route
+    raise HTTPException(status_code=404, detail="File not found")
 
 # Catch-all route to serve React app (must be last!)
 @app.get("/{path:path}")
