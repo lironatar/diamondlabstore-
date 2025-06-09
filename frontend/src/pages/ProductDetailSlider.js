@@ -141,6 +141,9 @@ const ProductDetailSlider = () => {
     
     try {
       console.log('Making API call to get price...');
+      console.log('API URL:', `/products/${id}/price`);
+      console.log('API Params:', { carat_pricing_id: selectedCarat.carat_pricing_id });
+      
       const response = await axios.get(`/products/${id}/price`, {
         params: { carat_pricing_id: selectedCarat.carat_pricing_id },
         timeout: 10000,
@@ -149,16 +152,65 @@ const ProductDetailSlider = () => {
         }
       });
       
-      console.log('Price API response:', response.data);
+      console.log('Full API response object:', response);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data:', response.data);
+      console.log('Response data type:', typeof response.data);
       
-      if (response.data && typeof response.data.final_price === 'number') {
-        setCurrentPrice(response.data.final_price);
-        console.log('Price set from API:', response.data.final_price);
+      let extractedPrice = null;
+      
+      if (response.data) {
+        const possiblePriceFields = [
+          'final_price',
+          'price',
+          'total_price',
+          'calculated_price',
+          'amount',
+          'cost'
+        ];
+        
+        for (const field of possiblePriceFields) {
+          if (response.data[field] !== undefined && response.data[field] !== null) {
+            extractedPrice = parseFloat(response.data[field]);
+            console.log(`Found price in field '${field}':`, extractedPrice);
+            break;
+          }
+        }
+        
+        if (extractedPrice === null && typeof response.data === 'number') {
+          extractedPrice = response.data;
+          console.log('Response data is directly a number:', extractedPrice);
+        }
+        
+        if (extractedPrice === null && typeof response.data === 'string') {
+          const parsed = parseFloat(response.data);
+          if (!isNaN(parsed)) {
+            extractedPrice = parsed;
+            console.log('Response data is a numeric string:', extractedPrice);
+          }
+        }
+      }
+      
+      if (extractedPrice !== null && !isNaN(extractedPrice) && extractedPrice >= 0) {
+        setCurrentPrice(Math.round(extractedPrice));
+        console.log('Successfully set price from API:', Math.round(extractedPrice));
       } else {
-        throw new Error('Invalid price response format');
+        console.warn('Could not extract valid price from response, available fields:', Object.keys(response.data || {}));
+        throw new Error(`No valid price found in response. Available fields: ${Object.keys(response.data || {}).join(', ')}`);
       }
     } catch (error) {
       console.error('Price API failed, calculating fallback price:', error);
+      
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        console.error('Error response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
       
       const basePrice = product.base_price || product.price || 1000;
       const caratWeight = selectedCarat.carat_weight || 1;
@@ -184,6 +236,56 @@ const ProductDetailSlider = () => {
       setPriceLoading(false);
     }
   }, [product, availableCarats, id]);
+
+  // Debug function to test price API - only available in development
+  const testPriceAPI = useCallback(async () => {
+    if (process.env.NODE_ENV !== 'development') return;
+    
+    console.log('=== TESTING PRICE API ===');
+    console.log('Product:', product);
+    console.log('Available carats:', availableCarats);
+    
+    if (availableCarats.length > 0) {
+      const testCarat = availableCarats[0];
+      console.log('Testing with first carat:', testCarat);
+      
+      try {
+        const response = await axios.get(`/products/${id}/price`, {
+          params: { carat_pricing_id: testCarat.carat_pricing_id },
+          timeout: 10000,
+        });
+        
+        console.log('✅ API Response successful!');
+        console.log('Full response:', response);
+        console.log('Response data structure:', JSON.stringify(response.data, null, 2));
+        
+        // Test direct access to different possible price fields
+        const testFields = ['final_price', 'price', 'total_price', 'calculated_price', 'amount', 'cost'];
+        testFields.forEach(field => {
+          if (response.data && response.data[field] !== undefined) {
+            console.log(`✅ Found field '${field}':`, response.data[field], typeof response.data[field]);
+          }
+        });
+        
+      } catch (error) {
+        console.error('❌ API Test failed:', error);
+        if (error.response) {
+          console.error('Status:', error.response.status);
+          console.error('Data:', error.response.data);
+        }
+      }
+    }
+    
+    console.log('=== END PRICE API TEST ===');
+  }, [product, availableCarats, id]);
+
+  // Make testPriceAPI available globally in development
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      window.testPriceAPI = testPriceAPI;
+      console.log('🔧 Debug function available: window.testPriceAPI()');
+    }
+  }, [testPriceAPI]);
 
   const handleCaratChange = useCallback((newIndex) => {
     if (newIndex !== selectedCaratIndex && newIndex >= 0 && newIndex < availableCarats.length) {
