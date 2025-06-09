@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -41,6 +42,11 @@ uploads_dir.mkdir(exist_ok=True)
 
 # Serve static files
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# Mount React static files (JS, CSS, etc.)
+frontend_build_dir = Path("../frontend/build")
+if frontend_build_dir.exists():
+    app.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
 
 # Dependency
 def get_db():
@@ -477,6 +483,19 @@ async def upload_file(
     # Return file URL
     file_url = f"/uploads/{unique_filename}"
     return {"url": file_url, "filename": unique_filename}
+
+# Catch-all route to serve React app (must be last!)
+@app.get("/{path:path}")
+async def serve_react_app(path: str):
+    """Serve React app for all non-API routes"""
+    # For admin and any other React routes, serve index.html
+    frontend_build_dir = Path("../frontend/build")
+    index_file = frontend_build_dir / "index.html"
+    
+    if index_file.exists():
+        return FileResponse(index_file)
+    else:
+        raise HTTPException(status_code=404, detail="Frontend not found")
 
 if __name__ == "__main__":
     import uvicorn
