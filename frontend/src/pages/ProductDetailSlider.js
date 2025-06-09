@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from 'react-use-cart';
-import ReactSlider from 'react-slider';
 import axios from 'axios';
-import { Heart, Star, Truck, Shield, RotateCcw, ShoppingCart, Gem, Calculator, DollarSign } from 'lucide-react';
+import { 
+  Heart, 
+  Star, 
+  ShoppingBag, 
+  Gem, 
+  Shield, 
+  Truck, 
+  RotateCcw, 
+  Check,
+  ChevronLeft,
+  ArrowLeft,
+  Sparkles,
+  Award,
+  Diamond
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { useFavorites } from '../hooks/useFavorites';
@@ -21,6 +34,7 @@ const ProductDetailSlider = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [priceLoading, setPriceLoading] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -31,13 +45,11 @@ const ProductDetailSlider = () => {
 
   useEffect(() => {
     if (product && availableCarats.length > 0) {
-      // Find default carat or use first available
       const defaultIndex = availableCarats.findIndex(carat => carat.is_default);
       const initialIndex = defaultIndex >= 0 ? defaultIndex : 0;
       setSelectedCaratIndex(initialIndex);
       calculatePrice(initialIndex);
     } else if (product) {
-      // Fallback to original price if no carats
       setCurrentPrice(product.price || 0);
     }
   }, [product, availableCarats]);
@@ -48,12 +60,10 @@ const ProductDetailSlider = () => {
       const response = await axios.get(`/products/${id}`);
       setProduct(response.data);
       
-      // Fetch available carats for this product
       try {
         const caratsResponse = await axios.get(`/products/${id}/carats`);
         setAvailableCarats(caratsResponse.data);
       } catch (error) {
-        console.log('No carats available for this product');
         setAvailableCarats([]);
       }
     } catch (error) {
@@ -67,10 +77,9 @@ const ProductDetailSlider = () => {
   const fetchRelatedProducts = async () => {
     try {
       const response = await axios.get('/products');
-      // Filter out current product and limit to 4
       const filtered = response.data
         .filter(p => p.id !== parseInt(id))
-        .slice(0, 4);
+        .slice(0, 3);
       setRelatedProducts(filtered);
     } catch (error) {
       console.error('Error fetching related products:', error);
@@ -92,7 +101,6 @@ const ProductDetailSlider = () => {
       setCurrentPrice(response.data.final_price);
     } catch (error) {
       console.error('Error calculating price:', error);
-      // Fallback calculation
       const basePrice = product.base_price || product.price || 0;
       const discountMultiplier = product.discount_percentage ? (1 - product.discount_percentage / 100) : 1;
       const caratMultiplier = selectedCarat.carat_weight || 1;
@@ -103,9 +111,9 @@ const ProductDetailSlider = () => {
     }
   };
 
-  const handleCaratChange = (newIndex) => {
-    setSelectedCaratIndex(newIndex);
-    calculatePrice(newIndex);
+  const handleCaratChange = (caratIndex) => {
+    setSelectedCaratIndex(caratIndex);
+    calculatePrice(caratIndex);
   };
 
   const handleAddToCart = () => {
@@ -142,12 +150,13 @@ const ProductDetailSlider = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-            <p className="mt-4 text-gray-600">טוען פרטי מוצר...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto"></div>
+            <Sparkles className="w-8 h-8 text-amber-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
+          <p className="mt-6 text-slate-600 font-light text-lg">טוען את יצירת האמנות...</p>
         </div>
       </div>
     );
@@ -155,11 +164,15 @@ const ProductDetailSlider = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
-        <div className="max-w-7xl mx-auto text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">מוצר לא נמצא</h2>
-          <Link to="/products" className="text-gold hover:underline">
-            חזרה לקטלוג המוצרים
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <h2 className="text-3xl font-light text-slate-800 mb-6">היצירה לא נמצאה</h2>
+          <Link 
+            to="/products" 
+            className="inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all duration-300 font-light"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            חזרה לאוסף
           </Link>
         </div>
       </div>
@@ -169,8 +182,7 @@ const ProductDetailSlider = () => {
   const isFavorite = favorites.some(fav => fav.id === product.id);
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      {/* SEO */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100" dir="rtl">
       <PageSEO 
         page="product"
         title={product.name}
@@ -178,318 +190,205 @@ const ProductDetailSlider = () => {
         product={product}
       />
 
-      {/* Enhanced Styles */}
-      <style jsx="true">{`
-        .text-gold { color: #d4af37; }
-        .bg-gold { background-color: #d4af37; }
-        .border-gold { border-color: #d4af37; }
-        .hover\\:bg-gold:hover { background-color: #d4af37; }
-        
-        /* Slider Styles */
-        .carat-slider {
-          width: 100%;
-          height: 8px;
-          background: linear-gradient(to right, #f3f4f6, #d4af37);
-          border-radius: 4px;
-          position: relative;
-          margin: 20px 0;
-        }
-        
-        .carat-slider .slider-thumb {
-          width: 24px;
-          height: 24px;
-          background: linear-gradient(135deg, #d4af37, #f4e4bc);
-          border: 3px solid white;
-          border-radius: 50%;
-          cursor: grab;
-          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          top: -8px;
-        }
-        
-        .carat-slider .slider-thumb:hover {
-          transform: scale(1.1);
-          box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
-        }
-        
-        .carat-slider .slider-thumb:active {
-          cursor: grabbing;
-          transform: scale(0.95);
-        }
-        
-        .carat-slider .slider-track {
-          background: linear-gradient(to right, #e5e7eb, #d4af37);
-          height: 8px;
-          border-radius: 4px;
-        }
-        
-        .carat-labels {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 10px;
-          padding: 0 12px;
-        }
-        
-        .carat-label {
-          font-size: 0.75rem;
-          color: #6b7280;
-          text-align: center;
-          position: relative;
-        }
-        
-        .carat-label.active {
-          color: #d4af37;
-          font-weight: 600;
-        }
-        
-        .price-display {
-          background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-          border: 2px solid #d4af37;
-          border-radius: 16px;
-          padding: 20px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .price-display::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background: linear-gradient(90deg, #d4af37, #f4e4bc, #d4af37);
-          animation: shimmer 2s ease-in-out infinite;
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
-        .loading-pulse {
-          animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-      `}</style>
+      {/* Breadcrumb */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <nav className="flex items-center gap-2 text-sm font-light">
+            <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">דף הבית</Link>
+            <ChevronLeft className="w-4 h-4 text-slate-400" />
+            <Link to="/products" className="text-slate-500 hover:text-slate-800 transition-colors">אוסף</Link>
+            <ChevronLeft className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-800 truncate max-w-xs">{product.name}</span>
+          </nav>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 space-x-reverse text-sm mb-8">
-          <Link to="/" className="text-gray-500 hover:text-gray-700">דף הבית</Link>
-          <span className="text-gray-400">/</span>
-          <Link to="/products" className="text-gray-500 hover:text-gray-700">מוצרים</Link>
-          <span className="text-gray-400">/</span>
-          <span className="text-gray-900">{product.name}</span>
-        </nav>
-
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Product Images */}
-            <div className="space-y-4">
+      {/* Main Product Section */}
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="grid lg:grid-cols-2 gap-16 items-start">
+          {/* Product Images */}
+          <div className="relative">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
               <ProductImageGallery 
                 images={product.images || product.image_url} 
                 productName={product.name}
-                className="w-full rounded-xl overflow-hidden"
+                className="w-full aspect-square rounded-2xl"
               />
             </div>
-
-            {/* Product Info */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-                
-                {/* Price Display */}
-                <div className="price-display mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <DollarSign className="w-6 h-6 text-gold" />
-                    <span className="text-sm text-gray-600">מחיר נוכחי</span>
-                  </div>
-                  
-                  {priceLoading ? (
-                    <div className="text-3xl font-bold text-gold loading-pulse">
-                      מחשב מחיר...
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {product.discount_percentage && currentPrice && (
-                        <div className="text-sm text-gray-500 line-through">
-                          ₪{(currentPrice / (1 - product.discount_percentage / 100)).toLocaleString()}
-                        </div>
-                      )}
-                      <div className="text-4xl font-bold text-gold">
-                        ₪{(currentPrice || 0).toLocaleString()}
-                      </div>
-                      {product.discount_percentage && (
-                        <div className="text-sm text-green-600 font-medium">
-                          חסכון של {product.discount_percentage}%
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Carat Selection Slider */}
-                {availableCarats.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                        <Gem className="w-5 h-5 text-gold" />
-                        בחר גודל קראט
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calculator className="w-4 h-4" />
-                        <span>המחיר מתעדכן אוטומטית</span>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <ReactSlider
-                        className="carat-slider"
-                        thumbClassName="slider-thumb"
-                        trackClassName="slider-track"
-                        value={selectedCaratIndex}
-                        onChange={handleCaratChange}
-                        min={0}
-                        max={availableCarats.length - 1}
-                        step={1}
-                        renderThumb={(props) => (
-                          <div {...props}>
-                            <Gem className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      />
-                      
-                      <div className="carat-labels">
-                        {availableCarats.map((carat, index) => (
-                          <div
-                            key={carat.id}
-                            className={`carat-label ${index === selectedCaratIndex ? 'active' : ''}`}
-                          >
-                            {carat.carat_weight} קראט
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {selectedCaratIndex >= 0 && availableCarats[selectedCaratIndex] && (
-                        <div className="mt-4 text-center">
-                          <div className="inline-flex items-center gap-2 bg-white rounded-lg px-4 py-2 shadow-sm">
-                            <Gem className="w-4 h-4 text-gold" />
-                            <span className="font-medium text-gray-900">
-                              נבחר: {availableCarats[selectedCaratIndex].carat_weight} קראט
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Product Rating */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600">4.9 (127 ביקורות)</span>
-                </div>
+            
+            {/* Quality Badges */}
+            <div className="absolute top-6 right-6 space-y-3">
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                <Award className="w-5 h-5 text-amber-600" />
               </div>
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                <Diamond className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-4">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={availableCarats.length > 0 && selectedCaratIndex < 0}
-                  className="w-full bg-gold text-white py-4 px-6 rounded-xl font-medium hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  {availableCarats.length > 0 && selectedCaratIndex < 0 ? 'בחר קראט כדי להוסיף לעגלה' : 'הוסף לעגלה'}
-                </button>
-
+          {/* Product Details */}
+          <div className="space-y-8">
+            {/* Header */}
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h1 className="text-4xl font-light text-slate-900 leading-tight mb-3">
+                    {product.name}
+                  </h1>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                      ))}
+                      <span className="mr-2 text-sm text-slate-600 font-light">(127 ביקורות)</span>
+                    </div>
+                  </div>
+                </div>
                 <button
                   onClick={toggleFavorite}
-                  className={`w-full py-3 px-6 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center gap-3 ${
+                  className={`p-3 rounded-full transition-all duration-300 ${
                     isFavorite 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                  {isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'}
+                  <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
+            </div>
 
-              {/* Product Features */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6 border-t border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Truck className="w-6 h-6 text-gold" />
-                  <div>
-                    <div className="font-medium text-gray-900">משלוח חינם</div>
-                    <div className="text-sm text-gray-600">למשלוחים מעל ₪500</div>
+            {/* Price Display */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+              {priceLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-pulse text-2xl font-light text-amber-600">מחשב מחיר...</div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  {product.discount_percentage && (
+                    <div className="text-sm text-slate-500 line-through mb-1 font-light">
+                      ₪{(currentPrice / (1 - product.discount_percentage / 100)).toLocaleString()}
+                    </div>
+                  )}
+                  <div className="text-4xl font-light text-slate-900 mb-2">
+                    ₪{(currentPrice || 0).toLocaleString()}
                   </div>
+                  {product.discount_percentage && (
+                    <div className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                      חסכון של {product.discount_percentage}%
+                    </div>
+                  )}
+                  <p className="text-sm text-slate-600 mt-2 font-light">כולל מע״ם ומשלוח חינם</p>
+                </div>
+              )}
+            </div>
+
+            {/* Carat Selection */}
+            {availableCarats.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <Gem className="w-5 h-5 text-amber-600" />
+                  <h3 className="text-lg font-medium text-slate-900">בחירת קראט</h3>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <Shield className="w-6 h-6 text-gold" />
-                  <div>
-                    <div className="font-medium text-gray-900">אחריות מלאה</div>
-                    <div className="text-sm text-gray-600">24 חודשים</div>
-                  </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {availableCarats.map((carat, index) => (
+                    <button
+                      key={carat.id}
+                      onClick={() => handleCaratChange(index)}
+                      className={`relative p-4 rounded-xl border-2 transition-all duration-300 text-center ${
+                        index === selectedCaratIndex
+                          ? 'border-amber-400 bg-amber-50 shadow-lg'
+                          : 'border-slate-200 bg-white hover:border-amber-200 hover:shadow-md'
+                      }`}
+                    >
+                      <div className="font-medium text-slate-900">{carat.carat_weight}</div>
+                      <div className="text-xs text-slate-600 font-light">קראט</div>
+                      {index === selectedCaratIndex && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <RotateCcw className="w-6 h-6 text-gold" />
-                  <div>
-                    <div className="font-medium text-gray-900">החזרה חינם</div>
-                    <div className="text-sm text-gray-600">תוך 30 יום</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Product Description */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">תיאור המוצר</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {product.description || 'תכשיט יהלום מעוצב ברמה הגבוהה ביותר, מיוצר בטכנולוגיה מתקדמת עם תשומת לב לכל פרט. מושלם לאירועים מיוחדים או כמתנה יוקרתית.'}
-                </p>
+                {selectedCaratIndex >= 0 && availableCarats[selectedCaratIndex] && (
+                  <div className="bg-slate-50 rounded-xl p-4 text-center">
+                    <span className="text-slate-700 font-light">
+                      נבחר: {availableCarats[selectedCaratIndex].carat_weight} קראט
+                    </span>
+                  </div>
+                )}
               </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-4">
+              <button
+                onClick={handleAddToCart}
+                disabled={availableCarats.length > 0 && selectedCaratIndex < 0}
+                className="w-full bg-slate-900 text-white py-4 px-8 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
+              >
+                <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                {availableCarats.length > 0 && selectedCaratIndex < 0 ? 'בחר קראט כדי להוסיף לעגלה' : 'הוסף לעגלה'}
+              </button>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
+                  <Truck className="w-6 h-6 text-amber-600" />
+                  <span className="text-sm font-light text-slate-700">משלוח חינם</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                  <span className="text-sm font-light text-slate-700">אחריות מלאה</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
+                  <RotateCcw className="w-6 h-6 text-green-600" />
+                  <span className="text-sm font-light text-slate-700">החזרה חינם</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Description */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">אודות היצירה</h3>
+              <p className="text-slate-700 leading-relaxed font-light">
+                {product.description || 'יצירת אמנות יהלומים מעוצבת ברמה הגבוהה ביותר. כל יהלום נבחר בקפידה ומעובד בטכנולוגיה מתקדמת. מושלם לאירועים מיוחדים או כהשקעה יוקרתית לעתיד.'}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">מוצרים קשורים</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="mt-24">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-light text-slate-900 mb-4">יצירות דומות</h2>
+              <p className="text-slate-600 font-light">המלצות מותאמות אישית מהאוסף שלנו</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
               {relatedProducts.map((relatedProduct) => (
                 <Link 
                   key={relatedProduct.id} 
                   to={`/products/${relatedProduct.id}`}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                  className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden bg-slate-50">
                     <img
-                      src={Array.isArray(relatedProduct.images) ? relatedProduct.images[0] : relatedProduct.image_url || "/api/placeholder/300/300"}
+                      src={Array.isArray(relatedProduct.images) ? relatedProduct.images[0] : relatedProduct.image_url || "/api/placeholder/400/400"}
                       alt={relatedProduct.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 text-sm">
+                  <div className="p-6">
+                    <h3 className="font-medium text-slate-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
                       {relatedProduct.name}
                     </h3>
-                    <div className="text-gold font-bold text-sm">
-                      אחל מ ₪{(relatedProduct.price || 0).toLocaleString()}
+                    <div className="text-xl font-light text-slate-800">
+                      החל מ ₪{(relatedProduct.price || 0).toLocaleString()}
                     </div>
                   </div>
                 </Link>
