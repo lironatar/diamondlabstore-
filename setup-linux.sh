@@ -37,6 +37,36 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Get configuration from user
+print_status "Configuration Setup"
+echo "=================================="
+
+# Get app port
+read -p "Enter backend port for the application (default: 8000): " APP_PORT
+if [ -z "$APP_PORT" ]; then
+    APP_PORT="8000"
+fi
+
+# Validate port range
+if ! [[ "$APP_PORT" =~ ^[0-9]+$ ]] || [ "$APP_PORT" -lt 1024 ] || [ "$APP_PORT" -gt 65535 ]; then
+    print_warning "Invalid port. Using default port 8000."
+    APP_PORT="8000"
+fi
+
+# Check if port is available
+if netstat -tuln 2>/dev/null | grep -q ":$APP_PORT "; then
+    print_warning "Port $APP_PORT is already in use!"
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+print_status "Configuration:"
+print_status "Backend Port: $APP_PORT"
+echo ""
+
 # Check if running as root (not recommended)
 if [ "$EUID" -eq 0 ]; then
     print_warning "Running as root is not recommended. Consider running as a regular user."
@@ -51,13 +81,13 @@ fi
 print_status "Updating system packages..."
 if command_exists apt-get; then
     sudo apt-get update
-    sudo apt-get install -y curl wget git build-essential
+    sudo apt-get install -y curl wget git build-essential net-tools
 elif command_exists yum; then
     sudo yum update -y
-    sudo yum install -y curl wget git gcc gcc-c++ make
+    sudo yum install -y curl wget git gcc gcc-c++ make net-tools
 elif command_exists dnf; then
     sudo dnf update -y
-    sudo dnf install -y curl wget git gcc gcc-c++ make
+    sudo dnf install -y curl wget git gcc gcc-c++ make net-tools
 else
     print_error "Unsupported package manager. Please install curl, wget, git, and build tools manually."
     exit 1
@@ -175,7 +205,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 UPLOAD_FOLDER=./uploads
 MAX_UPLOAD_SIZE=10485760
 ALLOWED_EXTENSIONS=jpg,jpeg,png,gif,webp
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CORS_ORIGINS=http://localhost,http://127.0.0.1
 DEBUG=False
 ENVIRONMENT=production
 EOL
@@ -222,10 +252,11 @@ cd ..
 
 # Create systemd service file
 print_status "Creating systemd service file..."
-SERVICE_FILE="/etc/systemd/system/diamondlab-store.service"
+SERVICE_NAME="diamondlab-store-$APP_PORT"
+SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 sudo tee $SERVICE_FILE > /dev/null << EOL
 [Unit]
-Description=DiamondLab Store API
+Description=DiamondLab Store API (Port $APP_PORT)
 After=network.target
 
 [Service]
@@ -233,7 +264,9 @@ Type=simple
 User=$USER
 WorkingDirectory=$(pwd)/backend
 Environment=PATH=$(pwd)/backend/venv/bin
-ExecStart=$(pwd)/backend/venv/bin/gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+Environment=LANG=en_US.UTF-8
+Environment=LC_ALL=en_US.UTF-8
+ExecStart=$(pwd)/backend/venv/bin/gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$APP_PORT
 Restart=always
 RestartSec=10
 
@@ -246,7 +279,7 @@ sudo systemctl daemon-reload
 
 # Create nginx configuration
 print_status "Creating nginx configuration..."
-NGINX_CONF="/etc/nginx/sites-available/diamondlab-store"
+NGINX_CONF="/etc/nginx/sites-available/diamondlab-store-$APP_PORT"
 sudo tee $NGINX_CONF > /dev/null << EOL
 server {
     listen 80;
@@ -262,7 +295,7 @@ server {
 
     # API backend
     location /api/ {
-        proxy_pass http://127.0.0.1:8000/;
+        proxy_pass http://127.0.0.1:$APP_PORT/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -308,8 +341,8 @@ cat > start-server.sh << 'EOL'
 echo "🚀 Starting DiamondLab Store..."
 
 # Start the backend service
-sudo systemctl start diamondlab-store
-sudo systemctl enable diamondlab-store
+sudo systemctl start $SERVICE_NAME
+sudo systemctl enable $SERVICE_NAME
 
 # Start nginx
 sudo systemctl start nginx
@@ -318,13 +351,14 @@ sudo systemctl enable nginx
 echo "✅ DiamondLab Store is running!"
 echo "Frontend: http://localhost"
 echo "API: http://localhost/api"
+echo "Backend Port: $APP_PORT"
 echo ""
 echo "To stop the server:"
-echo "sudo systemctl stop diamondlab-store"
+echo "sudo systemctl stop $SERVICE_NAME"
 echo "sudo systemctl stop nginx"
 echo ""
 echo "To view logs:"
-echo "sudo journalctl -u diamondlab-store -f"
+echo "sudo journalctl -u $SERVICE_NAME -f"
 EOL
 
 chmod +x start-server.sh
@@ -336,7 +370,7 @@ cat > stop-server.sh << 'EOL'
 echo "🛑 Stopping DiamondLab Store..."
 
 # Stop services
-sudo systemctl stop diamondlab-store
+sudo systemctl stop $SERVICE_NAME
 sudo systemctl stop nginx
 
 echo "✅ DiamondLab Store stopped."
@@ -376,8 +410,8 @@ echo "View logs:"
 echo "  sudo journalctl -u diamondlab-store -f"
 echo ""
 echo "Service management:"
-echo "  sudo systemctl status diamondlab-store"
-echo "  sudo systemctl restart diamondlab-store"
+echo "  sudo systemctl status $SERVICE_NAME"
+echo "  sudo systemctl restart $SERVICE_NAME"
 echo ""
 print_warning "⚠️  Important: Update the SECRET_KEY in backend/.env before production use!"
 print_warning "⚠️  Configure your domain name in nginx config if not using localhost"

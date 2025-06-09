@@ -56,6 +56,12 @@ if [ -z "$APP_PORT" ]; then
     APP_PORT="8000"
 fi
 
+# Validate port range
+if ! [[ "$APP_PORT" =~ ^[0-9]+$ ]] || [ "$APP_PORT" -lt 1024 ] || [ "$APP_PORT" -gt 65535 ]; then
+    print_warning "Invalid port. Using default port 8000."
+    APP_PORT="8000"
+fi
+
 # Check if port is available
 if netstat -tuln 2>/dev/null | grep -q ":$APP_PORT "; then
     print_warning "Port $APP_PORT is already in use!"
