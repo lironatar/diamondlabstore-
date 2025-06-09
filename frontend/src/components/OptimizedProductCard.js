@@ -31,7 +31,7 @@ const OptimizedProductCard = memo(({
 
   // Memoize formatted price
   const formattedPrice = useMemo(() => {
-    return product.price ? `₪${product.price.toLocaleString()}` : 'מחיר לא זמין';
+    return product.price ? `₪${(product.price || 0).toLocaleString()}` : 'מחיר לא זמין';
   }, [product.price]);
 
   // Memoized event handlers
@@ -124,7 +124,7 @@ const OptimizedProductCard = memo(({
               </span>
               {product.original_price && product.original_price > product.price && (
                 <span className="text-sm text-gray-500 line-through">
-                  ₪{product.original_price.toLocaleString()}
+                  ₪{(product.original_price || 0).toLocaleString()}
                 </span>
               )}
             </div>

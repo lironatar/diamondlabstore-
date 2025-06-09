@@ -136,7 +136,7 @@ const ShoppingCart = React.memo(() => {
                           </div>
 
                           <p className="text-xs text-gray-500">
-                            ₪{item.price.toLocaleString()} ליחידה
+                            ₪{(item.price || 0).toLocaleString()} ליחידה
                           </p>
                         </div>
                       </div>

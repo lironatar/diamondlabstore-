@@ -825,7 +825,7 @@ const AdminProducts = () => {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
                     <p className="text-lg font-bold text-amber-600">
-                      ₪{product.price.toLocaleString()}
+                      ₪{(product.price || 0).toLocaleString()}
                     </p>
                     {product.discount_percentage > 0 && (
                       <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">

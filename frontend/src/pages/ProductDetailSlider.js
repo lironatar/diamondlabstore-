@@ -320,13 +320,13 @@ const ProductDetailSlider = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {product.discount_percentage && (
+                      {product.discount_percentage && currentPrice && (
                         <div className="text-sm text-gray-500 line-through">
                           ₪{(currentPrice / (1 - product.discount_percentage / 100)).toLocaleString()}
                         </div>
                       )}
                       <div className="text-4xl font-bold text-gold">
-                        ₪{currentPrice.toLocaleString()}
+                        ₪{(currentPrice || 0).toLocaleString()}
                       </div>
                       {product.discount_percentage && (
                         <div className="text-sm text-green-600 font-medium">
@@ -489,7 +489,7 @@ const ProductDetailSlider = () => {
                       {relatedProduct.name}
                     </h3>
                     <div className="text-gold font-bold text-sm">
-                      אחל מ ₪{relatedProduct.price?.toLocaleString()}
+                      אחל מ ₪{(relatedProduct.price || 0).toLocaleString()}
                     </div>
                   </div>
                 </Link>

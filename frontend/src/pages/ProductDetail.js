@@ -686,7 +686,7 @@ const ProductDetail = () => {
                   <div className="p-3">
                     <h3 className="text-sm text-gray-900 mb-2 line-clamp-2">{relatedProduct.name}</h3>
                     <div className="text-lg font-semibold text-gray-900">
-                      אחל מ ₪{relatedProduct.price.toLocaleString()}
+                      אחל מ ₪{(relatedProduct.price || 0).toLocaleString()}
                     </div>
                   </div>
                 </Link>

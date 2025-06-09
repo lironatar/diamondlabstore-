@@ -700,7 +700,7 @@ const Products = () => {
                   
                   <Link to={`/products/${product.id}`}>
                     <p className="product-price">
-                      ₪{product.price.toLocaleString()}
+                      ₪{(product.price || 0).toLocaleString()}
                     </p>
                   </Link>
                 </div>
@@ -807,7 +807,7 @@ const Products = () => {
                     
                     <div className="text-left mr-6 flex-shrink-0">
                       <p className="text-xl md:text-2xl font-medium text-gold mb-3">
-                        ₪{product.price.toLocaleString()}
+                        ₪{(product.price || 0).toLocaleString()}
                       </p>
                       <div className="flex gap-2">
                         <button 
