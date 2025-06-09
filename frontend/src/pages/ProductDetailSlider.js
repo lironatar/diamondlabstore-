@@ -15,11 +15,7 @@ import {
   Sparkles,
   Award,
   Diamond,
-  Info,
-  Minus,
-  Plus,
-  Palette,
-  Ruler
+  Info
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ProductImageGallery from '../components/ProductImageGallery';
@@ -65,7 +61,8 @@ const ProductDetailSlider = () => {
   
   // Selection states
   const [selectedCaratIndex, setSelectedCaratIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState('ירוק'); // Default color
+  const [selectedMetal, setSelectedMetal] = useState('14k'); // Metal selection (14k, 18k)
+  const [selectedColor, setSelectedColor] = useState('זהב לבן'); // Default color
   const [selectedSize, setSelectedSize] = useState('6'); // Default ring size
   
   // Price states with smooth transitions
@@ -74,12 +71,15 @@ const ProductDetailSlider = () => {
   const [priceLoading, setPriceLoading] = useState(false);
   
   // Available options
+  const metalOptions = [
+    { name: '18k', value: '18k', multiplier: 1.3 },
+    { name: '14k', value: '14k', multiplier: 1.0 }
+  ];
+  
   const ringColors = [
-    { name: 'ירוק', value: 'green', color: '#10b981' },
-    { name: 'זהב צהוב', value: 'yellow', color: '#fbbf24' },
-    { name: 'זהב לבן', value: 'white', color: '#e5e7eb' },
-    { name: 'זהב ורוד', value: 'rose', color: '#f472b6' },
-    { name: 'פלטינום', value: 'platinum', color: '#9ca3af' }
+    { name: 'זהב ורוד', value: 'rose', color: '#E8B4A0' },
+    { name: 'זהב צהוב', value: 'yellow', color: '#F4D03F' },
+    { name: 'זהב לבן', value: 'white', color: '#C0C0C0' }
   ];
   
   const ringSizes = [
@@ -118,6 +118,7 @@ const ProductDetailSlider = () => {
     console.log('Calculating price for:', {
       product: product.id,
       carat: selectedCarat.carat_weight,
+      metal: selectedMetal,
       color: selectedColor,
       size: selectedSize
     });
@@ -129,6 +130,7 @@ const ProductDetailSlider = () => {
       const response = await axios.get(`/products/${id}/price`, {
         params: { 
           carat_pricing_id: selectedCarat.carat_pricing_id,
+          metal: selectedMetal,
           color: selectedColor,
           size: selectedSize
         },
@@ -173,17 +175,17 @@ const ProductDetailSlider = () => {
     } catch (error) {
       console.log('Price API failed, calculating fallback price:', error.message);
       
-      // Enhanced fallback calculation
+      // Enhanced fallback calculation with metal multiplier
       const baseProductPrice = product.price || product.base_price || basePrice || 1000;
       const caratMultiplier = Math.pow(parseFloat(selectedCarat.carat_weight), 1.5);
-      const colorMultiplier = selectedColor === 'platinum' ? 1.2 : 1.0;
-      const fallbackPrice = Math.round(baseProductPrice * caratMultiplier * colorMultiplier);
+      const metalMultiplier = metalOptions.find(m => m.value === selectedMetal)?.multiplier || 1.0;
+      const fallbackPrice = Math.round(baseProductPrice * caratMultiplier * metalMultiplier);
       
       console.log('Fallback price calculation:', {
         base: baseProductPrice,
         caratWeight: selectedCarat.carat_weight,
         caratMultiplier,
-        colorMultiplier,
+        metalMultiplier,
         final: fallbackPrice
       });
       
@@ -191,7 +193,7 @@ const ProductDetailSlider = () => {
     } finally {
       setPriceLoading(false);
     }
-  }, [product, uniqueCarats, selectedColor, selectedSize, id, basePrice]);
+  }, [product, uniqueCarats, selectedMetal, selectedColor, selectedSize, id, basePrice]);
 
   // Debounced price calculation
   useEffect(() => {
@@ -202,7 +204,7 @@ const ProductDetailSlider = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [selectedCaratIndex, selectedColor, selectedSize, calculatePrice]);
+  }, [selectedCaratIndex, selectedMetal, selectedColor, selectedSize, calculatePrice]);
 
   // Fetch product data
   useEffect(() => {
@@ -255,11 +257,12 @@ const ProductDetailSlider = () => {
     
     const selectedCarat = uniqueCarats[selectedCaratIndex];
     const cartItem = {
-      id: `${product.id}-${selectedCarat.carat_pricing_id}-${selectedColor}-${selectedSize}`,
+      id: `${product.id}-${selectedCarat.carat_pricing_id}-${selectedMetal}-${selectedColor}-${selectedSize}`,
       name: product.name,
       price: currentPrice,
       image: product.image_url,
       carat: selectedCarat.carat_weight,
+      metal: selectedMetal,
       color: selectedColor,
       size: selectedSize,
       product_id: product.id,
@@ -377,7 +380,7 @@ const ProductDetailSlider = () => {
               </div>
             </div>
 
-            {/* Carat Selection */}
+            {/* Carat Weight Selection */}
             {uniqueCarats.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -386,86 +389,80 @@ const ProductDetailSlider = () => {
                 </div>
                 
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  {/* Carat Slider */}
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max={uniqueCarats.length - 1}
-                      value={selectedCaratIndex}
-                      onChange={(e) => handleCaratChange(parseInt(e.target.value))}
-                      className="w-full h-2 bg-gradient-to-r from-amber-200 to-amber-400 rounded-lg appearance-none cursor-pointer slider-thumb"
-                      style={{
-                        background: `linear-gradient(to right, #fbbf24 0%, #fbbf24 ${(selectedCaratIndex / (uniqueCarats.length - 1)) * 100}%, #e5e7eb ${(selectedCaratIndex / (uniqueCarats.length - 1)) * 100}%, #e5e7eb 100%)`
-                      }}
-                    />
-                    
-                    {/* Carat markers */}
-                    <div className="flex justify-between mt-3">
-                      {uniqueCarats.map((carat, index) => (
-                        <div
-                          key={index}
-                          className={`text-center cursor-pointer transition-all duration-300 ${
-                            index === selectedCaratIndex 
-                              ? 'text-amber-600 font-semibold scale-110' 
-                              : 'text-slate-500 hover:text-slate-700'
-                          }`}
-                          onClick={() => handleCaratChange(index)}
-                        >
-                          <div className={`text-sm font-medium ${
-                            index === selectedCaratIndex ? 'text-amber-600' : 'text-slate-600'
-                          }`}>
-                            {parseFloat(carat.carat_weight).toFixed(2)}
-                          </div>
-                          <div className="text-xs text-slate-400">קראט</div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {uniqueCarats.map((carat, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleCaratChange(index)}
+                        className={`px-4 py-3 rounded-xl border-2 text-center transition-all duration-300 ${
+                          index === selectedCaratIndex
+                            ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
+                            : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className={`text-sm font-medium ${
+                          index === selectedCaratIndex ? 'text-teal-900' : 'text-slate-700'
+                        }`}>
+                          {parseFloat(carat.carat_weight).toFixed(2)}
                         </div>
-                      ))}
-                    </div>
+                        <div className="text-xs text-slate-400">קראט</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Ring Color Selection */}
+            {/* Metal Selection - Clean Design Like Image */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-amber-600" />
-                <h3 className="text-lg font-medium text-slate-900">צבע הטבעת</h3>
-              </div>
+              <h3 className="text-lg font-medium text-slate-900">
+                מתכת : {selectedMetal} {selectedColor}
+              </h3>
               
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                <div className="flex flex-wrap gap-3">
-                  {ringColors.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setSelectedColor(color.name)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
-                        selectedColor === color.name
-                          ? 'border-amber-400 bg-amber-50 shadow-md scale-105'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div 
-                        className="w-4 h-4 rounded-full border border-slate-300"
+                <div className="flex items-center justify-between">
+                  {/* Metal Options */}
+                  <div className="flex items-center gap-8">
+                    {metalOptions.map((metal) => (
+                      <button
+                        key={metal.value}
+                        onClick={() => setSelectedMetal(metal.value)}
+                        className={`text-2xl font-light transition-all duration-300 ${
+                          selectedMetal === metal.value
+                            ? 'text-teal-500 border-b-2 border-teal-500 pb-1'
+                            : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        {metal.name}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="w-px h-12 bg-slate-200 mx-6" />
+                  
+                  {/* Color Selection */}
+                  <div className="flex items-center gap-4">
+                    {ringColors.map((color) => (
+                      <button
+                        key={color.value}
+                        onClick={() => setSelectedColor(color.name)}
+                        className={`w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                          selectedColor === color.name
+                            ? 'border-slate-400 scale-110 shadow-lg'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
                         style={{ backgroundColor: color.color }}
+                        title={color.name}
                       />
-                      <span className={`text-sm font-medium ${
-                        selectedColor === color.name ? 'text-amber-900' : 'text-slate-700'
-                      }`}>
-                        {color.name}
-                      </span>
-                    </button>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Ring Size Selection */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Ruler className="w-5 h-5 text-amber-600" />
-                <h3 className="text-lg font-medium text-slate-900">מידת הטבעת</h3>
-              </div>
+              <h3 className="text-lg font-medium text-slate-900">מידת הטבעת</h3>
               
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
                 <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
@@ -475,7 +472,7 @@ const ProductDetailSlider = () => {
                       onClick={() => setSelectedSize(size)}
                       className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all duration-300 ${
                         selectedSize === size
-                          ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-md scale-105'
+                          ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
                           : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
@@ -486,7 +483,7 @@ const ProductDetailSlider = () => {
               </div>
             </div>
 
-            {/* Price Display - Now positioned below selections */}
+            {/* Price Display */}
             <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 shadow-lg border border-amber-200">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -510,6 +507,7 @@ const ProductDetailSlider = () => {
                   {selectedCarat && (
                     <div className="text-sm text-slate-500">
                       קראט: {parseFloat(selectedCarat.carat_weight).toFixed(2)} | 
+                      מתכת: {selectedMetal} | 
                       צבע: {selectedColor} | 
                       מידה: {selectedSize}
                     </div>
@@ -557,36 +555,6 @@ const ProductDetailSlider = () => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .slider-thumb::-webkit-slider-thumb {
-          appearance: none;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #fbbf24, #f59e0b);
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-          transition: all 0.3s ease;
-        }
-        
-        .slider-thumb::-webkit-slider-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        .slider-thumb::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #fbbf24, #f59e0b);
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-          transition: all 0.3s ease;
-        }
-      `}</style>
     </div>
   );
 };
