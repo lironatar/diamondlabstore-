@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from 'react-use-cart';
 import axios from 'axios';
-import ReactSlider from 'react-slider';
 import { 
   Heart, 
   Star, 
@@ -16,7 +15,9 @@ import {
   Sparkles,
   Award,
   Diamond,
-  Info
+  Info,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ProductImageGallery from '../components/ProductImageGallery';
@@ -86,7 +87,7 @@ const ProductDetailSlider = () => {
     }
   };
 
-  const calculatePrice = async (caratIndex) => {
+  const calculatePrice = useCallback(async (caratIndex) => {
     if (!product || availableCarats.length === 0) return;
     
     const selectedCarat = availableCarats[caratIndex];
@@ -109,12 +110,29 @@ const ProductDetailSlider = () => {
     } finally {
       setPriceLoading(false);
     }
+  }, [product, availableCarats, id]);
+
+  const handleCaratChange = useCallback((newIndex) => {
+    if (newIndex !== selectedCaratIndex && newIndex >= 0 && newIndex < availableCarats.length) {
+      setSelectedCaratIndex(newIndex);
+      calculatePrice(newIndex);
+    }
+  }, [selectedCaratIndex, availableCarats.length, calculatePrice]);
+
+  const handleSliderChange = (e) => {
+    const newIndex = parseInt(e.target.value);
+    handleCaratChange(newIndex);
   };
 
-  const handleCaratChange = (caratIndex) => {
-    if (caratIndex !== selectedCaratIndex) {
-      setSelectedCaratIndex(caratIndex);
-      calculatePrice(caratIndex);
+  const decrementCarat = () => {
+    if (selectedCaratIndex > 0) {
+      handleCaratChange(selectedCaratIndex - 1);
+    }
+  };
+
+  const incrementCarat = () => {
+    if (selectedCaratIndex < availableCarats.length - 1) {
+      handleCaratChange(selectedCaratIndex + 1);
     }
   };
 
@@ -182,6 +200,7 @@ const ProductDetailSlider = () => {
   }
 
   const isFavorite = favorites.some(fav => fav.id === product.id);
+  const selectedCarat = availableCarats[selectedCaratIndex];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100" dir="rtl">
@@ -286,7 +305,7 @@ const ProductDetailSlider = () => {
               )}
             </div>
 
-            {/* Carat Selection with Slider */}
+            {/* Carat Selection with Custom Slider */}
             {availableCarats.length > 0 && (
               <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
@@ -294,11 +313,11 @@ const ProductDetailSlider = () => {
                   <h3 className="text-base md:text-lg font-medium text-slate-900">בחירת קראט</h3>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-slate-200">
                   {/* Current Selection Display */}
                   <div className="text-center mb-6">
-                    <div className="text-2xl md:text-3xl font-light text-slate-900 mb-1">
-                      {availableCarats[selectedCaratIndex]?.carat_weight || 0} קראט
+                    <div className="text-3xl md:text-4xl font-light text-slate-900 mb-2">
+                      {selectedCarat?.carat_weight || 0} קראט
                     </div>
                     <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
                       <Info className="w-4 h-4" />
@@ -306,41 +325,74 @@ const ProductDetailSlider = () => {
                     </div>
                   </div>
 
-                  {/* Slider Component */}
-                  <div className="px-2 md:px-4">
-                    <ReactSlider
-                      className="carat-slider"
-                      thumbClassName="carat-thumb"
-                      trackClassName="carat-track"
-                      value={selectedCaratIndex}
-                      min={0}
-                      max={availableCarats.length - 1}
-                      step={1}
-                      onChange={handleCaratChange}
-                      renderThumb={(props, state) => (
-                        <div {...props} className="carat-thumb">
-                          <div className="thumb-content">
-                            {availableCarats[state.valueNow]?.carat_weight || ''}
-                          </div>
-                        </div>
-                      )}
-                    />
+                  {/* Control Buttons */}
+                  <div className="flex items-center justify-between mb-6">
+                    <button
+                      onClick={decrementCarat}
+                      disabled={selectedCaratIndex === 0}
+                      className="p-3 rounded-full bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      <Minus className="w-4 h-4 text-slate-700" />
+                    </button>
                     
-                    {/* Slider Labels */}
-                    <div className="flex justify-between mt-4 px-2">
-                      <span className="text-xs md:text-sm text-slate-500">
-                        {availableCarats[0]?.carat_weight || ''} קראט
-                      </span>
-                      <span className="text-xs md:text-sm text-slate-500">
-                        {availableCarats[availableCarats.length - 1]?.carat_weight || ''} קראט
-                      </span>
+                    <div className="text-center flex-1 mx-4">
+                      <div className="text-lg font-medium text-slate-800">
+                        {selectedCaratIndex + 1} מתוך {availableCarats.length}
+                      </div>
                     </div>
+                    
+                    <button
+                      onClick={incrementCarat}
+                      disabled={selectedCaratIndex === availableCarats.length - 1}
+                      className="p-3 rounded-full bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      <Plus className="w-4 h-4 text-slate-700" />
+                    </button>
+                  </div>
+
+                  {/* Custom Slider */}
+                  <div className="px-2 md:px-4">
+                    <div className="relative">
+                      <input
+                        type="range"
+                        min="0"
+                        max={availableCarats.length - 1}
+                        value={selectedCaratIndex}
+                        onChange={handleSliderChange}
+                        className="carat-slider w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50"
+                      />
+                      <div className="flex justify-between mt-4 px-2">
+                        <span className="text-xs md:text-sm text-slate-500">
+                          {availableCarats[0]?.carat_weight || ''} קראט
+                        </span>
+                        <span className="text-xs md:text-sm text-slate-500">
+                          {availableCarats[availableCarats.length - 1]?.carat_weight || ''} קראט
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Carat Options Grid */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-6">
+                    {availableCarats.map((carat, index) => (
+                      <button
+                        key={carat.id}
+                        onClick={() => handleCaratChange(index)}
+                        className={`p-2 rounded-lg text-xs transition-all duration-200 ${
+                          index === selectedCaratIndex
+                            ? 'bg-amber-100 text-amber-800 border-2 border-amber-400'
+                            : 'bg-slate-50 text-slate-600 border-2 border-transparent hover:bg-slate-100'
+                        }`}
+                      >
+                        {carat.carat_weight}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Selected Carat Info */}
                   <div className="mt-6 p-4 bg-slate-50 rounded-xl text-center">
                     <span className="text-slate-700 font-light">
-                      נבחר: {availableCarats[selectedCaratIndex]?.carat_weight || 0} קראט
+                      נבחר: {selectedCarat?.carat_weight || 0} קראט
                     </span>
                   </div>
                 </div>
@@ -421,76 +473,58 @@ const ProductDetailSlider = () => {
         )}
       </div>
 
-      {/* Slider Styles */}
+      {/* Custom Slider Styles */}
       <style jsx>{`
         .carat-slider {
-          width: 100%;
-          height: 40px;
-          position: relative;
+          background: linear-gradient(to right, #f1f5f9 0%, #e2e8f0 100%);
         }
-
-        .carat-track {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          height: 6px;
-          background: linear-gradient(to right, #f1f5f9, #e2e8f0);
-          border-radius: 3px;
-          width: 100%;
-        }
-
-        .carat-track.carat-track-0 {
-          background: linear-gradient(to right, #f59e0b, #d97706);
-        }
-
-        .carat-thumb {
-          width: 50px;
-          height: 50px;
-          background: linear-gradient(135deg, #ffffff, #f8fafc);
-          border: 3px solid #f59e0b;
+        
+        .carat-slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
-          cursor: grab;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          cursor: pointer;
+          border: 3px solid #ffffff;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
           transition: all 0.2s ease;
-          outline: none;
-          top: 50%;
-          transform: translateY(-50%);
         }
-
-        .carat-thumb:hover, .carat-thumb:focus {
-          transform: translateY(-50%) scale(1.1);
-          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
-          border-color: #d97706;
+        
+        .carat-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
         }
-
-        .carat-thumb:active {
-          cursor: grabbing;
-          transform: translateY(-50%) scale(0.95);
+        
+        .carat-slider::-webkit-slider-thumb:active {
+          transform: scale(0.95);
         }
-
-        .thumb-content {
-          font-weight: 600;
-          font-size: 10px;
-          color: #d97706;
-          text-align: center;
-          line-height: 1;
+        
+        .carat-slider::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          cursor: pointer;
+          border: 3px solid #ffffff;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+          transition: all 0.2s ease;
+        }
+        
+        .carat-slider::-moz-range-thumb:hover {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
         }
 
         @media (min-width: 768px) {
-          .carat-thumb {
-            width: 60px;
-            height: 60px;
+          .carat-slider::-webkit-slider-thumb {
+            width: 28px;
+            height: 28px;
           }
-
-          .thumb-content {
-            font-size: 12px;
-          }
-
-          .carat-track {
-            height: 8px;
+          
+          .carat-slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
           }
         }
       `}</style>
