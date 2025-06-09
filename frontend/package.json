@@ -1,0 +1,60 @@
+{
+  "name": "diamond-store-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.5.2",
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.6.2",
+    "framer-motion": "^12.15.0",
+    "lucide-react": "^0.294.0",
+    "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
+    "react-helmet-async": "^2.0.5",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.8.1",
+    "react-scan": "^0.3.4",
+    "react-scripts": "5.0.1",
+    "react-slider": "^2.0.6",
+    "react-use-cart": "^1.14.0",
+    "swiper": "^11.2.8",
+    "tailwindcss": "^3.3.6",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "set PORT=3001 && react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "scan": "npx react-scan@latest http://localhost:3001"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:8001",
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17"
+  }
+}

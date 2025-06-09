@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  
+  <!-- Homepage - Highest Priority -->
+  <url>
+    <loc>https://libi-jewelry.com/</loc>
+    <lastmod>2024-01-15T10:00:00+02:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/hero-banner.webp</image:loc>
+      <image:caption>ליבי תכשיטים - יהלומי מעבדה איכותיים בישראל</image:caption>
+      <image:title>ליבי תכשיטים</image:title>
+    </image:image>
+  </url>
+
+  <!-- Products Pages - High Priority -->
+  <url>
+    <loc>https://libi-jewelry.com/products</loc>
+    <lastmod>2024-01-15T09:30:00+02:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/products" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/products" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/products" />
+  </url>
+
+  <!-- Category Pages -->
+  <url>
+    <loc>https://libi-jewelry.com/categories/engagement-rings</loc>
+    <lastmod>2024-01-15T09:00:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/categories/engagement-rings" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/categories/engagement-rings" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/categories/engagement-rings" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/engagement-rings-category.webp</image:loc>
+      <image:caption>טבעות אירוסין יהלום מעבדה איכותיות</image:caption>
+      <image:title>טבעות אירוסין יהלום מעבדה</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/categories/earrings</loc>
+    <lastmod>2024-01-15T09:00:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/categories/earrings" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/categories/earrings" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/categories/earrings" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/earrings-category.webp</image:loc>
+      <image:caption>עגילי יהלום מעבדה יוקרתיים</image:caption>
+      <image:title>עגילי יהלום מעבדה</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/categories/necklaces</loc>
+    <lastmod>2024-01-15T09:00:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/categories/necklaces" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/categories/necklaces" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/categories/necklaces" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/necklaces-category.webp</image:loc>
+      <image:caption>שרשראות יהלום מעבדה מעוצבות</image:caption>
+      <image:title>שרשראות יהלום מעבדה</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/categories/bracelets</loc>
+    <lastmod>2024-01-15T09:00:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/categories/bracelets" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/categories/bracelets" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/categories/bracelets" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/bracelets-category.webp</image:loc>
+      <image:caption>צמידי יהלום מעבדה אלגנטיים</image:caption>
+      <image:title>צמידי יהלום מעבדה</image:title>
+    </image:image>
+  </url>
+
+  <!-- Sample Product Pages -->
+  <url>
+    <loc>https://libi-jewelry.com/products/1</loc>
+    <lastmod>2024-01-14T15:30:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/products/1" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/products/1" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/products/1" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/products/classic-diamond-ring.webp</image:loc>
+      <image:caption>טבעת יהלום קלאסית - יהלום מעבדה 1 קרט</image:caption>
+      <image:title>טבעת יהלום קלאסית</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/products/2</loc>
+    <lastmod>2024-01-14T15:30:00+02:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/products/2" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/products/2" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/products/2" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/products/elegant-diamond-earrings.webp</image:loc>
+      <image:caption>עגילי יהלום אלגנטיים - יהלומי מעבדה איכותיים</image:caption>
+      <image:title>עגילי יהלום אלגנטיים</image:title>
+    </image:image>
+  </url>
+
+  <!-- About Page -->
+  <url>
+    <loc>https://libi-jewelry.com/about</loc>
+    <lastmod>2024-01-10T12:00:00+02:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/about" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/about" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/about" />
+  </url>
+
+  <!-- Contact Page -->
+  <url>
+    <loc>https://libi-jewelry.com/contact</loc>
+    <lastmod>2024-01-10T12:00:00+02:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/contact" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/contact" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/contact" />
+  </url>
+
+  <!-- Blog/News Section (for content marketing) -->
+  <url>
+    <loc>https://libi-jewelry.com/blog</loc>
+    <lastmod>2024-01-15T08:00:00+02:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/blog" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/blog" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/blog" />
+  </url>
+
+  <!-- Blog Posts (Sample) -->
+  <url>
+    <loc>https://libi-jewelry.com/blog/lab-grown-diamonds-guide</loc>
+    <lastmod>2024-01-12T14:00:00+02:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/blog/lab-grown-diamonds-guide" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/blog/lab-grown-diamonds-guide" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/blog/lab-grown-diamonds-guide" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/blog/lab-grown-diamonds-guide.webp</image:loc>
+      <image:caption>מדריך מקיף ליהלומי מעבדה - כל מה שצריך לדעת</image:caption>
+      <image:title>מדריך יהלומי מעבדה</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/blog/engagement-ring-shopping-guide</loc>
+    <lastmod>2024-01-10T16:00:00+02:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/blog/engagement-ring-shopping-guide" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/blog/engagement-ring-shopping-guide" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/blog/engagement-ring-shopping-guide" />
+    <image:image>
+      <image:loc>https://libi-jewelry.com/images/blog/engagement-ring-guide.webp</image:loc>
+      <image:caption>מדריך לקניית טבעת אירוסין - כל הטיפים החשובים</image:caption>
+      <image:title>מדריך קניית טבעת אירוסין</image:title>
+    </image:image>
+  </url>
+
+  <!-- Help/FAQ Pages -->
+  <url>
+    <loc>https://libi-jewelry.com/faq</loc>
+    <lastmod>2024-01-08T10:00:00+02:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/faq" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/faq" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/faq" />
+  </url>
+
+  <!-- Policies -->
+  <url>
+    <loc>https://libi-jewelry.com/privacy-policy</loc>
+    <lastmod>2024-01-01T00:00:00+02:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/privacy-policy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/privacy-policy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/privacy-policy" />
+  </url>
+
+  <url>
+    <loc>https://libi-jewelry.com/terms-of-service</loc>
+    <lastmod>2024-01-01T00:00:00+02:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://libi-jewelry.com/terms-of-service" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://libi-jewelry.com/en/terms-of-service" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://libi-jewelry.com/terms-of-service" />
+  </url>
+
+</urlset> 

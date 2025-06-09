@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Variants</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>Debug Color Variants</h1>
+        
+        <div id="results" style="margin-top: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px;"></div>
+        
+        <button onclick="testAPI()" style="padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test API Connection
+        </button>
+        
+        <button onclick="testProducts()" style="padding: 10px 20px; margin: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test Products API
+        </button>
+        
+        <button onclick="testVariants()" style="padding: 10px 20px; margin: 10px; background: #ffc107; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Test Variants API
+        </button>
+
+        <div style="margin-top: 20px;">
+            <h3>Add Test Variant</h3>
+            <input type="number" id="productId" placeholder="Product ID" style="padding: 5px; margin: 5px;">
+            <input type="text" id="colorName" placeholder="Color Name" value="זהב ורוד" style="padding: 5px; margin: 5px;">
+            <input type="color" id="colorCode" value="#ff69b4" style="padding: 5px; margin: 5px;">
+            <button onclick="addVariant()" style="padding: 10px 20px; margin: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Add Variant
+            </button>
+        </div>
+    </div>
+
+    <script>
+        axios.defaults.baseURL = 'http://localhost:8001/api';
+        
+        function log(message, data = null) {
+            const results = document.getElementById('results');
+            const time = new Date().toLocaleTimeString();
+            results.innerHTML += `<div style="margin: 5px 0; padding: 5px; border-left: 3px solid #007bff;">
+                <strong>[${time}]</strong> ${message}
+                ${data ? `<pre style="background: #e9ecef; padding: 10px; margin: 5px 0; border-radius: 3px; font-size: 12px;">${JSON.stringify(data, null, 2)}</pre>` : ''}
+            </div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testAPI() {
+            try {
+                log('🔄 Testing API connection...');
+                const response = await fetch('http://localhost:8001/api/products');
+                if (response.ok) {
+                    log('✅ API connection successful!');
+                } else {
+                    log(`❌ API connection failed with status: ${response.status}`);
+                }
+            } catch (error) {
+                log('❌ API connection error:', error.message);
+            }
+        }
+
+        async function testProducts() {
+            try {
+                log('🔄 Fetching products...');
+                const response = await axios.get('/products');
+                log('✅ Products fetched successfully!', response.data.slice(0, 2));
+            } catch (error) {
+                log('❌ Products fetch error:', {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status
+                });
+            }
+        }
+
+        async function testVariants() {
+            try {
+                log('🔄 Testing variants endpoint...');
+                // First get a product
+                const productsResponse = await axios.get('/products');
+                if (productsResponse.data.length > 0) {
+                    const productId = productsResponse.data[0].id;
+                    log(`📦 Using product ID: ${productId}`);
+                    
+                    const variantsResponse = await axios.get(`/products/${productId}/variants`);
+                    log('✅ Variants fetched successfully!', variantsResponse.data);
+                } else {
+                    log('❌ No products found to test variants');
+                }
+            } catch (error) {
+                log('❌ Variants test error:', {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status
+                });
+            }
+        }
+
+        async function addVariant() {
+            try {
+                const productId = document.getElementById('productId').value;
+                const colorName = document.getElementById('colorName').value;
+                const colorCode = document.getElementById('colorCode').value;
+
+                if (!productId) {
+                    log('❌ Please enter a product ID');
+                    return;
+                }
+
+                log('🔄 Adding variant...');
+                
+                const variantData = {
+                    color_name: colorName,
+                    color_code: colorCode,
+                    images: [],
+                    is_default: false,
+                    sort_order: 0
+                };
+
+                log('📝 Variant data:', variantData);
+
+                const response = await axios.post(`/products/${productId}/variants`, variantData);
+                log('✅ Variant added successfully!', response.data);
+            } catch (error) {
+                log('❌ Add variant error:', {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status,
+                    config: error.config
+                });
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            setTimeout(testAPI, 1000);
+        };
+    </script>
+</body>
+</html> 

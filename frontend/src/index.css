@@ -1,0 +1,526 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import elegant Hebrew fonts */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&display=swap');
+
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Enable hardware acceleration for smoother scrolling without transform */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+body {
+  font-family: 'Heebo', 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #fef7f0 100%);
+  direction: rtl;
+  overflow-x: hidden;
+  /* Improve scrolling performance */
+  -webkit-overflow-scrolling: touch;
+  /* Enable hardware acceleration without transform */
+  backface-visibility: hidden;
+  perspective: 1000px;
+  /* Improve scroll performance */
+  overflow-anchor: none;
+  /* Reduce paint operations */
+  will-change: scroll-position;
+}
+
+/* Enhanced scrollbar with better performance */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #d4af37, #f4e4bc);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #e6c558, #f4e4bc);
+}
+
+/* Optimized Glass morphism utilities */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Improve performance */
+  will-change: transform, background, box-shadow;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.glass-effect:hover {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) translateZ(0);
+  -webkit-transform: translateY(-2px) translateZ(0);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
+  /* Improve performance */
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Elegant gradients */
+.gradient-gold {
+  background: linear-gradient(135deg, #d4af37, #f4e4bc, #d4af37);
+}
+
+.gradient-gold-text {
+  background: linear-gradient(135deg, #d4af37, #e6c558);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-elegant {
+  background: linear-gradient(135deg, #2c3e50, #34495e, #2c3e50);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+  to { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
+}
+
+/* Elegant typography */
+.text-elegant {
+  color: #2c3e50;
+  letter-spacing: 0.3px;
+}
+
+.text-gold {
+  color: #d4af37;
+}
+
+.font-elegant {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+.font-luxury {
+  font-family: 'Assistant', sans-serif;
+  font-weight: 200;
+  letter-spacing: 1px;
+}
+
+/* Enhanced buttons */
+.btn-elegant {
+  background: linear-gradient(135deg, #d4af37, #f4e4bc, #d4af37);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #8b5a00;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+  border-radius: 50px;
+  padding: 12px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-elegant::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-elegant:hover::before {
+  left: 100%;
+}
+
+.btn-elegant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, #e6c558, #f4e4bc, #e6c558);
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #2c3e50;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-radius: 50px;
+  padding: 12px 24px;
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Card effects */
+.card-elegant {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-elegant::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #d4af37, #f4e4bc, #d4af37);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.card-elegant:hover::before {
+  transform: scaleX(1);
+}
+
+.card-elegant:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Parallax effects */
+.parallax {
+  transform-style: preserve-3d;
+}
+
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.parallax-bg {
+  transform: translateZ(-1px) scale(2);
+}
+
+.parallax-mid {
+  transform: translateZ(-0.5px) scale(1.5);
+}
+
+/* Section dividers */
+.divider-elegant {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #d4af37 20%,
+    #d4af37 80%,
+    transparent 100%
+  );
+  margin: 0 auto;
+  position: relative;
+}
+
+.divider-elegant::before,
+.divider-elegant::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  background: #d4af37;
+  border-radius: 50%;
+}
+
+.divider-elegant::before {
+  left: 20%;
+}
+
+.divider-elegant::after {
+  right: 20%;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* Print styles */
+@media print {
+  .glass-effect,
+  .glass-dark {
+    background: white !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-effect {
+    background: white;
+    border: 2px solid #000;
+  }
+  
+  .btn-elegant {
+    background: #d4af37;
+    border: 2px solid #8b5a00;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-elegant:focus {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom utilities */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Elegant spacing */
+.space-elegant > * + * {
+  margin-top: 1.5rem;
+}
+
+.space-elegant-lg > * + * {
+  margin-top: 2.5rem;
+}
+
+/* Text shadow for elegance */
+.text-shadow-elegant {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-gold {
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+/* Additional scroll performance optimizations */
+* {
+  /* Enable GPU acceleration for all elements */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Optimize text rendering */
+  text-rendering: optimizeSpeed;
+  /* Improve font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling behavior for better performance */
+@supports (scroll-behavior: smooth) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Optimize heavy animations for mobile devices */
+@media (max-width: 768px) {
+  .glass-effect,
+  .glass-dark {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+  
+  /* Reduce animation complexity on mobile but don't disable completely */
+  * {
+    animation-duration: 0.3s !important;
+    transition-duration: 0.3s !important;
+  }
+  
+  /* Ensure content is visible */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  /* Fix mobile layout issues */
+  body {
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  /* Ensure mobile containers don't overflow */
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Fix text rendering on mobile */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Improve button sizing for touch */
+  button, .btn-elegant, .btn-glass {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Optimize for low-end devices */
+@media (max-width: 480px) {
+  .glass-effect,
+  .glass-dark {
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+  }
+  
+  /* Ensure cards remain visible and functional */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+  }
+  
+  /* Simplify animations but keep basic transitions */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* High refresh rate optimization */
+@media (min-resolution: 120dpi) {
+  * {
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+}
+
+/* Contain layout shifts */
+.contain-layout {
+  contain: layout style paint;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* Specific scroll performance improvements */
+.parallax-section {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* Disable expensive filters on slower devices */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Custom utilities for enhanced jewelry color selection */
+@layer utilities {
+  .border-3 {
+    border-width: 3px;
+  }
+} 
