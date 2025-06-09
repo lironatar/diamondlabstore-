@@ -77,9 +77,9 @@ const ProductDetailSlider = () => {
   ];
   
   const ringColors = [
-    { name: 'זהב ורוד', value: 'rose', color: '#E8B4A0' },
+    { name: 'זהב לבן', value: 'white', color: '#C0C0C0' },
     { name: 'זהב צהוב', value: 'yellow', color: '#F4D03F' },
-    { name: 'זהב לבן', value: 'white', color: '#C0C0C0' }
+    { name: 'זהב ורוד', value: 'rose', color: '#E8B4A0' }
   ];
   
   const ringSizes = [
@@ -324,7 +324,7 @@ const ProductDetailSlider = () => {
       
       <div className="container mx-auto px-4 py-6 lg:py-12">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-sm text-slate-600 mb-8 bg-white/60 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm w-fit">
+        <div className="flex items-center gap-2 text-sm text-slate-600 mb-6 bg-white/60 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm w-fit">
           <Link to="/" className="hover:text-amber-600 transition-colors">בית</Link>
           <ChevronLeft className="w-4 h-4" />
           <Link to="/products" className="hover:text-amber-600 transition-colors">מוצרים</Link>
@@ -353,9 +353,9 @@ const ProductDetailSlider = () => {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Header */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-start justify-between">
                 <h1 className="text-3xl lg:text-4xl font-light text-slate-900 leading-tight">
                   {product.name}
@@ -380,21 +380,18 @@ const ProductDetailSlider = () => {
               </div>
             </div>
 
-            {/* Carat Weight Selection */}
+            {/* Carat Weight Selection - Now Clearly Visible */}
             {uniqueCarats.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Gem className="w-5 h-5 text-amber-600" />
-                  <h3 className="text-lg font-medium text-slate-900">בחירת קראט</h3>
-                </div>
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium text-slate-900">בחירת קראט</h3>
                 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {uniqueCarats.map((carat, index) => (
                       <button
                         key={index}
                         onClick={() => handleCaratChange(index)}
-                        className={`px-4 py-3 rounded-xl border-2 text-center transition-all duration-300 ${
+                        className={`px-3 py-2 rounded-lg border-2 text-center transition-all duration-300 ${
                           index === selectedCaratIndex
                             ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
                             : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -405,7 +402,6 @@ const ProductDetailSlider = () => {
                         }`}>
                           {parseFloat(carat.carat_weight).toFixed(2)}
                         </div>
-                        <div className="text-xs text-slate-400">קראט</div>
                       </button>
                     ))}
                   </div>
@@ -413,21 +409,40 @@ const ProductDetailSlider = () => {
               </div>
             )}
 
-            {/* Metal Selection - Clean Design Like Image */}
-            <div className="space-y-4">
+            {/* Metal & Color Selection - Ultra Compact Design */}
+            <div className="space-y-3">
               <h3 className="text-lg font-medium text-slate-900">
                 מתכת : {selectedMetal} {selectedColor}
               </h3>
               
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+              <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
                 <div className="flex items-center justify-between">
-                  {/* Metal Options */}
-                  <div className="flex items-center gap-8">
+                  {/* Color Selection - Left Side */}
+                  <div className="flex items-center gap-3">
+                    {ringColors.map((color) => (
+                      <button
+                        key={color.value}
+                        onClick={() => setSelectedColor(color.name)}
+                        className={`w-10 h-10 rounded-full border-3 transition-all duration-300 ${
+                          selectedColor === color.name
+                            ? 'border-slate-600 scale-110 shadow-lg'
+                            : 'border-slate-200 hover:border-slate-400'
+                        }`}
+                        style={{ backgroundColor: color.color }}
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="w-px h-8 bg-slate-200" />
+                  
+                  {/* Metal Options - Right Side */}
+                  <div className="flex items-center gap-6">
                     {metalOptions.map((metal) => (
                       <button
                         key={metal.value}
                         onClick={() => setSelectedMetal(metal.value)}
-                        className={`text-2xl font-light transition-all duration-300 ${
+                        className={`text-xl font-light transition-all duration-300 ${
                           selectedMetal === metal.value
                             ? 'text-teal-500 border-b-2 border-teal-500 pb-1'
                             : 'text-slate-400 hover:text-slate-600'
@@ -437,40 +452,21 @@ const ProductDetailSlider = () => {
                       </button>
                     ))}
                   </div>
-                  
-                  <div className="w-px h-12 bg-slate-200 mx-6" />
-                  
-                  {/* Color Selection */}
-                  <div className="flex items-center gap-4">
-                    {ringColors.map((color) => (
-                      <button
-                        key={color.value}
-                        onClick={() => setSelectedColor(color.name)}
-                        className={`w-12 h-12 rounded-full border-4 transition-all duration-300 ${
-                          selectedColor === color.name
-                            ? 'border-slate-400 scale-110 shadow-lg'
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                        style={{ backgroundColor: color.color }}
-                        title={color.name}
-                      />
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Ring Size Selection */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-slate-900">מידת הטבעת</h3>
+            {/* Ring Size Selection - Minimal Design */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-slate-900">מידת טבעת : {selectedSize}</h3>
               
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+              <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
+                <div className="flex items-center gap-2 flex-wrap">
                   {ringSizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all duration-300 ${
+                      className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all duration-300 ${
                         selectedSize === size
                           ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
                           : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -484,11 +480,11 @@ const ProductDetailSlider = () => {
             </div>
 
             {/* Price Display */}
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-6 shadow-lg border border-amber-200">
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 shadow-lg border border-amber-200">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex items-center gap-4">
-                    <div className={`text-3xl font-light text-slate-900 transition-all duration-500 ${
+                    <div className={`text-2xl font-light text-slate-900 transition-all duration-500 ${
                       priceLoading ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
                     }`}>
                       <AnimatedPrice value={currentPrice} />
@@ -500,12 +496,12 @@ const ProductDetailSlider = () => {
                     )}
                   </div>
                   
-                  <div className="text-slate-600 font-light">
+                  <div className="text-slate-600 font-light text-sm">
                     כולל מע"ם ומשלוח חינם
                   </div>
                   
                   {selectedCarat && (
-                    <div className="text-sm text-slate-500">
+                    <div className="text-xs text-slate-500">
                       קראט: {parseFloat(selectedCarat.carat_weight).toFixed(2)} | 
                       מתכת: {selectedMetal} | 
                       צבע: {selectedColor} | 
@@ -515,40 +511,40 @@ const ProductDetailSlider = () => {
                 </div>
                 
                 {priceLoading && (
-                  <div className="flex items-center justify-center w-12 h-12 bg-amber-200 rounded-full">
-                    <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="flex items-center justify-center w-10 h-10 bg-amber-200 rounded-full">
+                    <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleAddToCart}
                 disabled={uniqueCarats.length === 0 || priceLoading}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-4 rounded-full font-medium hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-full font-medium hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="w-5 h-5" />
                 הוסף לעגלה
               </button>
               
-              <button className="sm:w-auto bg-slate-900 text-white px-8 py-4 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-3">
+              <button className="sm:w-auto bg-slate-900 text-white px-6 py-3 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2">
                 <Sparkles className="w-5 h-5" />
                 קנה עכשיו
               </button>
             </div>
 
             {/* Trust Indicators */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Shield, title: 'אחריות לכל החיים', color: 'text-green-600', bg: 'bg-green-50' },
                 { icon: Truck, title: 'משלוח חינם', color: 'text-blue-600', bg: 'bg-blue-50' },
                 { icon: RotateCcw, title: 'החזרה 30 יום', color: 'text-purple-600', bg: 'bg-purple-50' }
               ].map((feature, index) => (
-                <div key={index} className={`${feature.bg} rounded-xl p-4 text-center transition-all duration-300 hover:shadow-md hover:scale-105`}>
-                  <feature.icon className={`w-6 h-6 ${feature.color} mx-auto mb-2`} />
-                  <div className="text-sm font-medium text-slate-700">{feature.title}</div>
+                <div key={index} className={`${feature.bg} rounded-lg p-3 text-center transition-all duration-300 hover:shadow-md hover:scale-105`}>
+                  <feature.icon className={`w-5 h-5 ${feature.color} mx-auto mb-1`} />
+                  <div className="text-xs font-medium text-slate-700">{feature.title}</div>
                 </div>
               ))}
             </div>
