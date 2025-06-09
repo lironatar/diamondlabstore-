@@ -51,24 +51,46 @@ const ProductDetailSlider = () => {
       setSelectedCaratIndex(initialIndex);
       calculatePrice(initialIndex);
     } else if (product) {
-      setCurrentPrice(product.price || 0);
+      const basePrice = product.price || product.base_price || 0;
+      console.log('Setting base price:', basePrice);
+      setCurrentPrice(basePrice);
     }
   }, [product, availableCarats]);
 
   const fetchProduct = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`/products/${id}`);
+      console.log('Fetching product with ID:', id);
+      
+      const response = await axios.get(`/products/${id}`, {
+        timeout: 10000,
+        validateStatus: function (status) {
+          return status < 500;
+        }
+      });
+      
+      console.log('Product response:', response.data);
       setProduct(response.data);
       
       try {
-        const caratsResponse = await axios.get(`/products/${id}/carats`);
-        setAvailableCarats(caratsResponse.data);
+        const caratsResponse = await axios.get(`/products/${id}/carats`, {
+          timeout: 10000,
+          validateStatus: function (status) {
+            return status < 500;
+          }
+        });
+        console.log('Carats response:', caratsResponse.data);
+        setAvailableCarats(caratsResponse.data || []);
       } catch (error) {
+        console.warn('Carats not available:', error.message);
         setAvailableCarats([]);
       }
     } catch (error) {
       console.error('Error fetching product:', error);
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      }
       toast.error('שגיאה בטעינת המוצר');
     } finally {
       setIsLoading(false);
@@ -77,7 +99,12 @@ const ProductDetailSlider = () => {
 
   const fetchRelatedProducts = async () => {
     try {
-      const response = await axios.get('/products');
+      const response = await axios.get('/products', {
+        timeout: 10000,
+        validateStatus: function (status) {
+          return status < 500;
+        }
+      });
       const filtered = response.data
         .filter(p => p.id !== parseInt(id))
         .slice(0, 3);
@@ -88,24 +115,70 @@ const ProductDetailSlider = () => {
   };
 
   const calculatePrice = useCallback(async (caratIndex) => {
-    if (!product || availableCarats.length === 0) return;
+    if (!product) {
+      console.log('No product available for price calculation');
+      return;
+    }
+    
+    console.log('Starting price calculation for carat index:', caratIndex);
+    console.log('Available carats:', availableCarats);
+    
+    if (availableCarats.length === 0) {
+      const basePrice = product.price || product.base_price || 0;
+      console.log('No carats available, using base price:', basePrice);
+      setCurrentPrice(basePrice);
+      return;
+    }
     
     const selectedCarat = availableCarats[caratIndex];
-    if (!selectedCarat) return;
+    if (!selectedCarat) {
+      console.log('No carat found at index:', caratIndex);
+      return;
+    }
 
+    console.log('Selected carat:', selectedCarat);
     setPriceLoading(true);
     
     try {
+      console.log('Making API call to get price...');
       const response = await axios.get(`/products/${id}/price`, {
-        params: { carat_pricing_id: selectedCarat.carat_pricing_id }
+        params: { carat_pricing_id: selectedCarat.carat_pricing_id },
+        timeout: 10000,
+        validateStatus: function (status) {
+          return status < 500;
+        }
       });
-      setCurrentPrice(response.data.final_price);
+      
+      console.log('Price API response:', response.data);
+      
+      if (response.data && typeof response.data.final_price === 'number') {
+        setCurrentPrice(response.data.final_price);
+        console.log('Price set from API:', response.data.final_price);
+      } else {
+        throw new Error('Invalid price response format');
+      }
     } catch (error) {
-      console.error('Error calculating price:', error);
-      const basePrice = product.base_price || product.price || 0;
-      const discountMultiplier = product.discount_percentage ? (1 - product.discount_percentage / 100) : 1;
-      const caratMultiplier = selectedCarat.carat_weight || 1;
-      const fallbackPrice = Math.round(basePrice * caratMultiplier * discountMultiplier);
+      console.error('Price API failed, calculating fallback price:', error);
+      
+      const basePrice = product.base_price || product.price || 1000;
+      const caratWeight = selectedCarat.carat_weight || 1;
+      const discountPercentage = product.discount_percentage || 0;
+      
+      let fallbackPrice = basePrice * caratWeight;
+      
+      if (discountPercentage > 0) {
+        fallbackPrice = fallbackPrice * (1 - discountPercentage / 100);
+      }
+      
+      fallbackPrice = Math.round(fallbackPrice);
+      
+      console.log('Fallback price calculation:', {
+        basePrice,
+        caratWeight,
+        discountPercentage,
+        fallbackPrice
+      });
+      
       setCurrentPrice(fallbackPrice);
     } finally {
       setPriceLoading(false);
@@ -114,6 +187,7 @@ const ProductDetailSlider = () => {
 
   const handleCaratChange = useCallback((newIndex) => {
     if (newIndex !== selectedCaratIndex && newIndex >= 0 && newIndex < availableCarats.length) {
+      console.log('Carat changed from', selectedCaratIndex, 'to', newIndex);
       setSelectedCaratIndex(newIndex);
       calculatePrice(newIndex);
     }
@@ -287,20 +361,25 @@ const ProductDetailSlider = () => {
                 </div>
               ) : (
                 <div className="text-center">
-                  {product.discount_percentage && (
+                  {product.discount_percentage && currentPrice > 0 && (
                     <div className="text-xs md:text-sm text-slate-500 line-through mb-1 font-light">
-                      ₪{Math.round((currentPrice || 0) / (1 - product.discount_percentage / 100)).toLocaleString()}
+                      ₪{Math.round(currentPrice / (1 - product.discount_percentage / 100)).toLocaleString()}
                     </div>
                   )}
                   <div className="text-2xl md:text-4xl font-light text-slate-900 mb-2">
-                    ₪{(currentPrice || 0).toLocaleString()}
+                    ₪{currentPrice > 0 ? currentPrice.toLocaleString() : 'לא זמין'}
                   </div>
-                  {product.discount_percentage && (
+                  {product.discount_percentage && currentPrice > 0 && (
                     <div className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs md:text-sm font-medium">
                       חסכון של {product.discount_percentage}%
                     </div>
                   )}
                   <p className="text-xs md:text-sm text-slate-600 mt-2 font-light">כולל מע״ם ומשלוח חינם</p>
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                      Debug: currentPrice={currentPrice}, base={product.base_price || product.price}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -370,23 +449,6 @@ const ProductDetailSlider = () => {
                         </span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Carat Options Grid */}
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-6">
-                    {availableCarats.map((carat, index) => (
-                      <button
-                        key={carat.id}
-                        onClick={() => handleCaratChange(index)}
-                        className={`p-2 rounded-lg text-xs transition-all duration-200 ${
-                          index === selectedCaratIndex
-                            ? 'bg-amber-100 text-amber-800 border-2 border-amber-400'
-                            : 'bg-slate-50 text-slate-600 border-2 border-transparent hover:bg-slate-100'
-                        }`}
-                      >
-                        {carat.carat_weight}
-                      </button>
-                    ))}
                   </div>
 
                   {/* Selected Carat Info */}
