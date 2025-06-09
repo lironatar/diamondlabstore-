@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from 'react-use-cart';
 import axios from 'axios';
+import ReactSlider from 'react-slider';
 import { 
   Heart, 
   Star, 
@@ -10,12 +11,12 @@ import {
   Shield, 
   Truck, 
   RotateCcw, 
-  Check,
   ChevronLeft,
   ArrowLeft,
   Sparkles,
   Award,
-  Diamond
+  Diamond,
+  Info
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ProductImageGallery from '../components/ProductImageGallery';
@@ -34,7 +35,6 @@ const ProductDetailSlider = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [priceLoading, setPriceLoading] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -112,8 +112,10 @@ const ProductDetailSlider = () => {
   };
 
   const handleCaratChange = (caratIndex) => {
-    setSelectedCaratIndex(caratIndex);
-    calculatePrice(caratIndex);
+    if (caratIndex !== selectedCaratIndex) {
+      setSelectedCaratIndex(caratIndex);
+      calculatePrice(caratIndex);
+    }
   };
 
   const handleAddToCart = () => {
@@ -150,7 +152,7 @@ const ProductDetailSlider = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center px-4" dir="rtl">
         <div className="text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto"></div>
@@ -164,12 +166,12 @@ const ProductDetailSlider = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center px-4" dir="rtl">
         <div className="text-center">
-          <h2 className="text-3xl font-light text-slate-800 mb-6">היצירה לא נמצאה</h2>
+          <h2 className="text-2xl md:text-3xl font-light text-slate-800 mb-6">היצירה לא נמצאה</h2>
           <Link 
             to="/products" 
-            className="inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all duration-300 font-light"
+            className="inline-flex items-center gap-2 px-6 md:px-8 py-3 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all duration-300 font-light"
           >
             <ArrowLeft className="w-4 h-4" />
             חזרה לאוסף
@@ -192,7 +194,7 @@ const ProductDetailSlider = () => {
 
       {/* Breadcrumb */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
           <nav className="flex items-center gap-2 text-sm font-light">
             <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">דף הבית</Link>
             <ChevronLeft className="w-4 h-4 text-slate-400" />
@@ -204,123 +206,144 @@ const ProductDetailSlider = () => {
       </div>
 
       {/* Main Product Section */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-16 items-start">
           {/* Product Images */}
-          <div className="relative">
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
+          <div className="relative order-1 lg:order-1">
+            <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden p-4 md:p-8">
               <ProductImageGallery 
                 images={product.images || product.image_url} 
                 productName={product.name}
-                className="w-full aspect-square rounded-2xl"
+                className="w-full aspect-square rounded-xl md:rounded-2xl"
               />
             </div>
             
             {/* Quality Badges */}
-            <div className="absolute top-6 right-6 space-y-3">
-              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                <Award className="w-5 h-5 text-amber-600" />
+            <div className="absolute top-4 md:top-6 right-4 md:right-6 space-y-2 md:space-y-3">
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 md:p-3 shadow-lg">
+                <Award className="w-4 h-4 md:w-5 md:h-5 text-amber-600" />
               </div>
-              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                <Diamond className="w-5 h-5 text-blue-600" />
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 md:p-3 shadow-lg">
+                <Diamond className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
               </div>
             </div>
           </div>
 
           {/* Product Details */}
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8 order-2 lg:order-2">
             {/* Header */}
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h1 className="text-4xl font-light text-slate-900 leading-tight mb-3">
+                  <h1 className="text-2xl md:text-4xl font-light text-slate-900 leading-tight mb-3">
                     {product.name}
                   </h1>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+                        <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-amber-400 fill-current" />
                       ))}
-                      <span className="mr-2 text-sm text-slate-600 font-light">(127 ביקורות)</span>
+                      <span className="mr-2 text-xs md:text-sm text-slate-600 font-light">(127 ביקורות)</span>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={toggleFavorite}
-                  className={`p-3 rounded-full transition-all duration-300 ${
+                  className={`p-2 md:p-3 rounded-full transition-all duration-300 ${
                     isFavorite 
                       ? 'bg-red-50 text-red-600 hover:bg-red-100' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
+                  <Heart className={`w-5 h-5 md:w-6 md:h-6 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
             </div>
 
             {/* Price Display */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl md:rounded-2xl p-4 md:p-6 border border-amber-200">
               {priceLoading ? (
                 <div className="text-center py-4">
-                  <div className="animate-pulse text-2xl font-light text-amber-600">מחשב מחיר...</div>
+                  <div className="animate-pulse text-xl md:text-2xl font-light text-amber-600">מחשב מחיר...</div>
                 </div>
               ) : (
                 <div className="text-center">
                   {product.discount_percentage && (
-                    <div className="text-sm text-slate-500 line-through mb-1 font-light">
-                      ₪{(currentPrice / (1 - product.discount_percentage / 100)).toLocaleString()}
+                    <div className="text-xs md:text-sm text-slate-500 line-through mb-1 font-light">
+                      ₪{Math.round((currentPrice || 0) / (1 - product.discount_percentage / 100)).toLocaleString()}
                     </div>
                   )}
-                  <div className="text-4xl font-light text-slate-900 mb-2">
+                  <div className="text-2xl md:text-4xl font-light text-slate-900 mb-2">
                     ₪{(currentPrice || 0).toLocaleString()}
                   </div>
                   {product.discount_percentage && (
-                    <div className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    <div className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs md:text-sm font-medium">
                       חסכון של {product.discount_percentage}%
                     </div>
                   )}
-                  <p className="text-sm text-slate-600 mt-2 font-light">כולל מע״ם ומשלוח חינם</p>
+                  <p className="text-xs md:text-sm text-slate-600 mt-2 font-light">כולל מע״ם ומשלוח חינם</p>
                 </div>
               )}
             </div>
 
-            {/* Carat Selection */}
+            {/* Carat Selection with Slider */}
             {availableCarats.length > 0 && (
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3">
                   <Gem className="w-5 h-5 text-amber-600" />
-                  <h3 className="text-lg font-medium text-slate-900">בחירת קראט</h3>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-3">
-                  {availableCarats.map((carat, index) => (
-                    <button
-                      key={carat.id}
-                      onClick={() => handleCaratChange(index)}
-                      className={`relative p-4 rounded-xl border-2 transition-all duration-300 text-center ${
-                        index === selectedCaratIndex
-                          ? 'border-amber-400 bg-amber-50 shadow-lg'
-                          : 'border-slate-200 bg-white hover:border-amber-200 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="font-medium text-slate-900">{carat.carat_weight}</div>
-                      <div className="text-xs text-slate-600 font-light">קראט</div>
-                      {index === selectedCaratIndex && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                  <h3 className="text-base md:text-lg font-medium text-slate-900">בחירת קראט</h3>
                 </div>
 
-                {selectedCaratIndex >= 0 && availableCarats[selectedCaratIndex] && (
-                  <div className="bg-slate-50 rounded-xl p-4 text-center">
+                <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
+                  {/* Current Selection Display */}
+                  <div className="text-center mb-6">
+                    <div className="text-2xl md:text-3xl font-light text-slate-900 mb-1">
+                      {availableCarats[selectedCaratIndex]?.carat_weight || 0} קראט
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+                      <Info className="w-4 h-4" />
+                      <span>גודל נבחר</span>
+                    </div>
+                  </div>
+
+                  {/* Slider Component */}
+                  <div className="px-2 md:px-4">
+                    <ReactSlider
+                      className="carat-slider"
+                      thumbClassName="carat-thumb"
+                      trackClassName="carat-track"
+                      value={selectedCaratIndex}
+                      min={0}
+                      max={availableCarats.length - 1}
+                      step={1}
+                      onChange={handleCaratChange}
+                      renderThumb={(props, state) => (
+                        <div {...props} className="carat-thumb">
+                          <div className="thumb-content">
+                            {availableCarats[state.valueNow]?.carat_weight || ''}
+                          </div>
+                        </div>
+                      )}
+                    />
+                    
+                    {/* Slider Labels */}
+                    <div className="flex justify-between mt-4 px-2">
+                      <span className="text-xs md:text-sm text-slate-500">
+                        {availableCarats[0]?.carat_weight || ''} קראט
+                      </span>
+                      <span className="text-xs md:text-sm text-slate-500">
+                        {availableCarats[availableCarats.length - 1]?.carat_weight || ''} קראט
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Selected Carat Info */}
+                  <div className="mt-6 p-4 bg-slate-50 rounded-xl text-center">
                     <span className="text-slate-700 font-light">
-                      נבחר: {availableCarats[selectedCaratIndex].carat_weight} קראט
+                      נבחר: {availableCarats[selectedCaratIndex]?.carat_weight || 0} קראט
                     </span>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -329,32 +352,32 @@ const ProductDetailSlider = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={availableCarats.length > 0 && selectedCaratIndex < 0}
-                className="w-full bg-slate-900 text-white py-4 px-8 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
+                className="w-full bg-slate-900 text-white py-3 md:py-4 px-6 md:px-8 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg text-sm md:text-base"
               >
-                <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
                 {availableCarats.length > 0 && selectedCaratIndex < 0 ? 'בחר קראט כדי להוסיף לעגלה' : 'הוסף לעגלה'}
               </button>
               
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
-                  <Truck className="w-6 h-6 text-amber-600" />
-                  <span className="text-sm font-light text-slate-700">משלוח חינם</span>
+              <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
+                <div className="flex flex-col items-center gap-1 md:gap-2 p-3 md:p-4 bg-white rounded-xl shadow-sm">
+                  <Truck className="w-5 h-5 md:w-6 md:h-6 text-amber-600" />
+                  <span className="text-xs md:text-sm font-light text-slate-700">משלוח חינם</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
-                  <Shield className="w-6 h-6 text-blue-600" />
-                  <span className="text-sm font-light text-slate-700">אחריות מלאה</span>
+                <div className="flex flex-col items-center gap-1 md:gap-2 p-3 md:p-4 bg-white rounded-xl shadow-sm">
+                  <Shield className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                  <span className="text-xs md:text-sm font-light text-slate-700">אחריות מלאה</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl shadow-sm">
-                  <RotateCcw className="w-6 h-6 text-green-600" />
-                  <span className="text-sm font-light text-slate-700">החזרה חינם</span>
+                <div className="flex flex-col items-center gap-1 md:gap-2 p-3 md:p-4 bg-white rounded-xl shadow-sm">
+                  <RotateCcw className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+                  <span className="text-xs md:text-sm font-light text-slate-700">החזרה חינם</span>
                 </div>
               </div>
             </div>
 
             {/* Product Description */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-medium text-slate-900 mb-4">אודות היצירה</h3>
-              <p className="text-slate-700 leading-relaxed font-light">
+            <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm">
+              <h3 className="text-base md:text-lg font-medium text-slate-900 mb-4">אודות היצירה</h3>
+              <p className="text-sm md:text-base text-slate-700 leading-relaxed font-light">
                 {product.description || 'יצירת אמנות יהלומים מעוצבת ברמה הגבוהה ביותר. כל יהלום נבחר בקפידה ומעובד בטכנולוגיה מתקדמת. מושלם לאירועים מיוחדים או כהשקעה יוקרתית לעתיד.'}
               </p>
             </div>
@@ -363,18 +386,18 @@ const ProductDetailSlider = () => {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-light text-slate-900 mb-4">יצירות דומות</h2>
+          <div className="mt-16 md:mt-24">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-2xl md:text-3xl font-light text-slate-900 mb-4">יצירות דומות</h2>
               <p className="text-slate-600 font-light">המלצות מותאמות אישית מהאוסף שלנו</p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {relatedProducts.map((relatedProduct) => (
                 <Link 
                   key={relatedProduct.id} 
                   to={`/products/${relatedProduct.id}`}
-                  className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="group bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 >
                   <div className="aspect-square overflow-hidden bg-slate-50">
                     <img
@@ -383,11 +406,11 @@ const ProductDetailSlider = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-6">
-                    <h3 className="font-medium text-slate-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
+                  <div className="p-4 md:p-6">
+                    <h3 className="font-medium text-slate-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2 text-sm md:text-base">
                       {relatedProduct.name}
                     </h3>
-                    <div className="text-xl font-light text-slate-800">
+                    <div className="text-lg md:text-xl font-light text-slate-800">
                       החל מ ₪{(relatedProduct.price || 0).toLocaleString()}
                     </div>
                   </div>
@@ -397,6 +420,80 @@ const ProductDetailSlider = () => {
           </div>
         )}
       </div>
+
+      {/* Slider Styles */}
+      <style jsx>{`
+        .carat-slider {
+          width: 100%;
+          height: 40px;
+          position: relative;
+        }
+
+        .carat-track {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 6px;
+          background: linear-gradient(to right, #f1f5f9, #e2e8f0);
+          border-radius: 3px;
+          width: 100%;
+        }
+
+        .carat-track.carat-track-0 {
+          background: linear-gradient(to right, #f59e0b, #d97706);
+        }
+
+        .carat-thumb {
+          width: 50px;
+          height: 50px;
+          background: linear-gradient(135deg, #ffffff, #f8fafc);
+          border: 3px solid #f59e0b;
+          border-radius: 50%;
+          cursor: grab;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+          outline: none;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        .carat-thumb:hover, .carat-thumb:focus {
+          transform: translateY(-50%) scale(1.1);
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+          border-color: #d97706;
+        }
+
+        .carat-thumb:active {
+          cursor: grabbing;
+          transform: translateY(-50%) scale(0.95);
+        }
+
+        .thumb-content {
+          font-weight: 600;
+          font-size: 10px;
+          color: #d97706;
+          text-align: center;
+          line-height: 1;
+        }
+
+        @media (min-width: 768px) {
+          .carat-thumb {
+            width: 60px;
+            height: 60px;
+          }
+
+          .thumb-content {
+            font-size: 12px;
+          }
+
+          .carat-track {
+            height: 8px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
