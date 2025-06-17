@@ -231,19 +231,34 @@ EOL
     print_success "Created .env file with secure SECRET_KEY"
 fi
 
-# Run database migrations
+# Run database setup using our migration fix script
 print_status "Setting up database..."
-if [ -f "alembic.ini" ]; then
-    LANG=en_US.UTF-8 alembic upgrade head
+cd ..
+if [ -f "fix_migration_preserve_data.py" ]; then
+    print_status "Using migration fix script to set up database..."
+    LANG=en_US.UTF-8 python3 fix_migration_preserve_data.py || {
+        print_warning "Migration script failed, trying fallback method..."
+        cd backend
+        LANG=en_US.UTF-8 python3 -c "
+from database import engine
+from models import Base
+Base.metadata.create_all(bind=engine)
+print('Database tables created successfully')
+"
+        cd ..
+    }
 else
-    # Create database tables if alembic is not set up
+    print_warning "Migration fix script not found, using fallback method..."
+    cd backend
     LANG=en_US.UTF-8 python3 -c "
 from database import engine
 from models import Base
 Base.metadata.create_all(bind=engine)
 print('Database tables created successfully')
 "
+    cd ..
 fi
+cd backend
 
 # Create English-only admin user creation script
 print_status "Creating English admin user setup script..."
