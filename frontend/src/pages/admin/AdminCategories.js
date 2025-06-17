@@ -11,6 +11,7 @@ const AdminCategories = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryImageUrl, setCategoryImageUrl] = useState('');
+  const [categoryHeroImageUrl, setCategoryHeroImageUrl] = useState('');
   const formRef = useRef(null);
   
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
@@ -21,7 +22,7 @@ const AdminCategories = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/categories');
+      const response = await axios.get('/api/categories');
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -42,18 +43,19 @@ const AdminCategories = () => {
         name: data.name,
         description: data.description || '',
         is_active: data.is_active !== false,
-        image_url: categoryImageUrl || null
+        image_url: categoryImageUrl || null,
+        hero_image_url: categoryHeroImageUrl || null
       };
 
       console.log('Processed category data:', categoryData);
 
       if (editingCategory) {
         console.log(`Updating category with ID: ${editingCategory.id}`);
-        await axios.put(`/categories/${editingCategory.id}`, categoryData);
+        await axios.put(`/api/categories/${editingCategory.id}`, categoryData);
         toast.success('הקטגוריה עודכנה בהצלחה');
       } else {
         console.log('Creating new category');
-        await axios.post('/categories', categoryData);
+        await axios.post('/api/categories', categoryData);
         toast.success('הקטגוריה נוצרה בהצלחה');
       }
       
@@ -62,11 +64,14 @@ const AdminCategories = () => {
       setShowForm(false);
       setEditingCategory(null);
       setCategoryImageUrl('');
+      setCategoryHeroImageUrl('');
       fetchCategories();
     } catch (error) {
       console.error('Error in onSubmit:', error);
       const errorMessage = error.response?.data?.detail || error.message;
       toast.error(editingCategory ? `שגיאה בעדכון הקטגוריה: ${errorMessage}` : `שגיאה ביצירת הקטגוריה: ${errorMessage}`);
+      
+      // Don't reset form on error to preserve user input
     }
   };
 
@@ -78,8 +83,9 @@ const AdminCategories = () => {
       setValue('description', category.description || '');
       setValue('is_active', category.is_active !== false);
       
-      // Set image URL for the component
+      // Set image URLs for the components
       setCategoryImageUrl(category.image_url || '');
+      setCategoryHeroImageUrl(category.hero_image_url || '');
       
       setShowForm(true);
       
@@ -109,7 +115,7 @@ const AdminCategories = () => {
 
     try {
       console.log(`Deleting category with ID: ${categoryId}`);
-      await axios.delete(`/categories/${categoryId}`);
+      await axios.delete(`/api/categories/${categoryId}`);
       toast.success(`הקטגוריה "${categoryName}" נמחקה בהצלחה`);
       fetchCategories();
     } catch (error) {
@@ -124,6 +130,7 @@ const AdminCategories = () => {
     setShowForm(false);
     setEditingCategory(null);
     setCategoryImageUrl('');
+    setCategoryHeroImageUrl('');
   };
 
   const GlassCard = ({ children, className = "" }) => (
@@ -335,18 +342,40 @@ const AdminCategories = () => {
               <div className="bg-white rounded-lg p-4 border border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <Image className="w-4 h-4 text-amber-500 ml-2" />
-                  תמונת הקטגוריה
+                  תמונות הקטגוריה
                 </h3>
                 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Regular Category Image */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      תמונת הקטגוריה הרגילה
+                    </label>
                 <CategoryImageUpload
                   value={categoryImageUrl}
                   onChange={setCategoryImageUrl}
-                  className="mb-4"
+                      className="mb-1"
                 />
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  תמונת הקטגוריה תוצג בדף הבית ובעמוד המוצרים כרקע לקטגוריה
+                    <p className="text-xs text-gray-500">
+                      תמונה זו תוצג ברשימת הקטגוריות ובכרטיסים
+                    </p>
+                  </div>
+
+                  {/* Hero Image */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      תמונת רקע עליונה (Hero Image)
+                    </label>
+                    <CategoryImageUpload
+                      value={categoryHeroImageUrl}
+                      onChange={setCategoryHeroImageUrl}
+                      className="mb-1"
+                    />
+                    <p className="text-xs text-gray-500">
+                      תמונה זו תוצג כרקע בחלק העליון של עמוד המוצרים כאשר מסננים לפי קטגוריה זו
                 </p>
+                  </div>
+                </div>
               </div>
 
               {/* Action Buttons */}

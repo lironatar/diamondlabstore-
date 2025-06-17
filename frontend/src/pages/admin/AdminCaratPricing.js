@@ -22,7 +22,7 @@ const AdminCaratPricing = () => {
   const fetchCaratPricings = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('/carat-pricing');
+      const response = await axios.get('/api/carat-pricing');
       setCaratPricings(response.data);
     } catch (error) {
       console.error('Error fetching carat pricings:', error);
@@ -36,10 +36,10 @@ const AdminCaratPricing = () => {
     e.preventDefault();
     try {
       if (editingCarat) {
-        await axios.put(`/carat-pricing/${editingCarat.id}`, formData);
+        await axios.put(`/api/carat-pricing/${editingCarat.id}`, formData);
         toast.success('תמחור קראט עודכן בהצלחה');
       } else {
-        await axios.post('/carat-pricing', formData);
+        await axios.post('/api/carat-pricing', formData);
         toast.success('תמחור קראט נוסף בהצלחה');
       }
       
@@ -66,7 +66,7 @@ const AdminCaratPricing = () => {
   const handleDelete = async (id) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק תמחור קראט זה?')) {
       try {
-        await axios.delete(`/carat-pricing/${id}`);
+        await axios.delete(`/api/carat-pricing/${id}`);
         toast.success('תמחור קראט נמחק בהצלחה');
         fetchCaratPricings();
       } catch (error) {

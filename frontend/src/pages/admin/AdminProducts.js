@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -8,6 +9,7 @@ import ProductImageGallery from '../../components/ProductImageGallery';
 import ProductVariantManager from '../../components/ProductVariantManager';
 
 const AdminProducts = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('/products');
+      const response = await axios.get('/api/products');
       setProducts(response.data);
     } catch (error) {
       toast.error('שגיאה בטעינת המוצרים');
@@ -36,7 +38,7 @@ const AdminProducts = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/categories');
+      const response = await axios.get('/api/categories');
       setCategories(response.data);
     } catch (error) {
       toast.error('שגיאה בטעינת הקטגוריות');
@@ -49,12 +51,39 @@ const AdminProducts = () => {
       console.log('Editing product:', editingProduct);
       console.log('Product images:', productImages);
       
-      // Convert numeric fields
+      // Validate required fields
+      if (!data.name || !data.price || !data.category_id) {
+        toast.error('אנא מלא את כל השדות החובה');
+        return;
+      }
+      
+      // Convert numeric fields with validation
+      const price = parseFloat(data.price);
+      const categoryId = parseInt(data.category_id);
+      
+      if (isNaN(price) || price <= 0) {
+        toast.error('מחיר חייב להיות מספר חיובי');
+        return;
+      }
+      
+      if (isNaN(categoryId) || categoryId <= 0) {
+        toast.error('אנא בחר קטגוריה תקינה');
+        return;
+      }
+      
       const productData = {
-        ...data,
-        price: parseFloat(data.price),
+        name: data.name.trim(),
+        description: data.description?.trim() || null,
+        price: price,
+        base_price: price, // Set base_price same as price for now
         carat_weight: data.carat_weight ? parseFloat(data.carat_weight) : null,
-        category_id: parseInt(data.category_id),
+        color_grade: data.color_grade || null,
+        clarity_grade: data.clarity_grade || null,
+        cut_grade: data.cut_grade || null,
+        shape: data.shape || null,
+        certificate_number: data.certificate_number?.trim() || null,
+        category_id: categoryId,
+        is_featured: Boolean(data.is_featured),
         discount_percentage: data.discount_percentage ? parseFloat(data.discount_percentage) : 0
       };
 
@@ -65,20 +94,28 @@ const AdminProducts = () => {
       }
 
       console.log('Processed product data:', productData);
+      console.log('Product data JSON:', JSON.stringify(productData, null, 2));
 
       let productId;
+      let isNewProduct = false;
+      
       if (editingProduct) {
         console.log(`Updating product with ID: ${editingProduct.id}`);
-        await axios.put(`/products/${editingProduct.id}`, productData);
+        console.log('PUT request URL:', `/api/products/${editingProduct.id}`);
+        const response = await axios.put(`/api/products/${editingProduct.id}`, productData);
+        console.log('Update response:', response.data);
         productId = editingProduct.id;
         
         toast.success('המוצר עודכן בהצלחה');
       } else {
         console.log('Creating new product');
-        const response = await axios.post('/products', productData);
+        console.log('POST request URL:', '/api/products');
+        const response = await axios.post('/api/products', productData);
+        console.log('Create response:', response.data);
         productId = response.data.id;
+        isNewProduct = true;
         
-        toast.success('המוצר נוצר בהצלחה');
+        toast.success('המוצר נוצר בהצלחה! מעביר לדף המוצרים...');
       }
       
       // For both new and existing products, save/update images
@@ -93,7 +130,7 @@ const AdminProducts = () => {
           
           try {
             console.log('Saving new image:', image.image_url || image.url);
-            await axios.post(`/products/${productId}/images`, {
+            await axios.post(`/api/products/${productId}/images`, {
               image_url: image.image_url || image.url,
               alt_text: image.alt_text || '',
               is_primary: image.is_primary || false,
@@ -112,10 +149,45 @@ const AdminProducts = () => {
       setShowForm(false);
       setEditingProduct(null);
       setProductImages([]);
+      
+      // If it's a new product, redirect to products page after a short delay
+      if (isNewProduct) {
+        setTimeout(() => {
+          navigate('/admin/products');
+        }, 1500); // Give time for the success message to be seen
+      } else {
       fetchProducts();
+      }
     } catch (error) {
       console.error('Error in onSubmit:', error);
-      const errorMessage = error.response?.data?.detail || error.message;
+      
+      // Enhanced error handling based on Axios best practices
+      let errorMessage = 'שגיאה לא ידועה';
+      if (error.response) {
+        // Server responded with error status
+        console.log('Error response data:', error.response.data);
+        console.log('Error response status:', error.response.status);
+        console.log('Error response headers:', error.response.headers);
+        
+        if (error.response.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = `שגיאת שרת: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        console.log('Error request:', error.request);
+        errorMessage = 'לא התקבלה תגובה מהשרת';
+      } else {
+        // Error in request setup
+        console.log('Error message:', error.message);
+        errorMessage = error.message;
+      }
+      
       toast.error(editingProduct ? `שגיאה בעדכון המוצר: ${errorMessage}` : `שגיאה ביצירת המוצר: ${errorMessage}`);
     }
   };
@@ -193,7 +265,7 @@ const AdminProducts = () => {
 
     try {
       console.log(`Deleting product with ID: ${productId}`); // Debug log
-      await axios.delete(`/products/${productId}`);
+      await axios.delete(`/api/products/${productId}`);
       toast.success(`${productName} נמחק בהצלחה`);
       fetchProducts();
     } catch (error) {
@@ -433,12 +505,23 @@ const AdminProducts = () => {
         <div className="glass-card mb-6">
           <div className="p-6">
             <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="ml-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  title="חזרה לדף הבקרה"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
               <div>
                 <h1 className="text-2xl font-medium text-gray-900 mb-1 flex items-center">
                   <Diamond className="w-6 h-6 text-amber-500 ml-2" />
                   ניהול מוצרים
                 </h1>
                 <p className="text-gray-600 text-sm">הוסף, ערוך ומחק מוצרים בחנות</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowForm(true)}

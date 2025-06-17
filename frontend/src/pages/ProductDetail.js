@@ -38,11 +38,11 @@ const ProductDetail = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`/products/${id}`);
-      setProduct(response.data);
-      
-      // Fetch available carats for this product
-      const caratsResponse = await axios.get(`/products/${id}/carats`);
+              const response = await axios.get(`/api/products/${id}`);
+        setProduct(response.data);
+        
+        // Fetch available carats for this product
+        const caratsResponse = await axios.get(`/api/products/${id}/carats`);
       setAvailableCarats(caratsResponse.data);
       
       // Set default carat (find the one marked as default or first one)
@@ -53,7 +53,7 @@ const ProductDetail = () => {
       
       // Fetch related products from the same category
       if (response.data.category_id) {
-        const relatedResponse = await axios.get(`/products?category_id=${response.data.category_id}&limit=4`);
+        const relatedResponse = await axios.get(`/api/products?category_id=${response.data.category_id}&limit=4`);
         setRelatedProducts(relatedResponse.data.filter(p => p.id !== parseInt(id)));
       }
     } catch (error) {
@@ -69,7 +69,7 @@ const ProductDetail = () => {
     setPriceLoading(true);
     try {
       const selectedCarat = availableCarats[caratIndex];
-      const response = await axios.get(`/products/${id}/price`, {
+      const response = await axios.get(`/api/products/${id}/price/${selectedCarat.carat_weight}`, {
         params: { carat_pricing_id: selectedCarat.carat_pricing_id }
       });
       setCurrentPrice(response.data);
@@ -420,78 +420,118 @@ const ProductDetail = () => {
           </div>
 
           {/* Product Details */}
-          <div className="bg-white p-6 h-fit">
-            {/* Category Badge */}
+            <div className="bg-white p-8 h-fit">
+            {/* Category Badge - More minimal */}
             {product.category && (
-              <div className="category-pill">
-                <Diamond className="w-4 h-4" />
-                קטגוריה: {product.category.name}
+              <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-6">
+                <Diamond className="w-4 h-4 text-yellow-500" />
+                {product.category.name}
               </div>
             )}
 
-            {/* Product Title */}
-            <h1 className="text-2xl font-light text-gray-900 mb-6 leading-relaxed">
+            {/* Product Title - Clean and bold */}
+            <h1 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">
               {product.name}
             </h1>
 
-            {/* Metal Selection */}
-            <div className="mb-6">
-              <h3 className="text-gray-700 mb-3 font-medium">בחר/י את צבע התכשיטים</h3>
-              <div className="flex gap-2">
-                {['14K', '14K', '14K'].map((metal, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedMetal(metal)}
-                    className={`metal-button ${selectedMetal === metal && index === 2 ? 'selected' : ''}`}
-                  >
-                    {metal}
-                  </button>
-                ))}
+            {/* Ring Size Selection - Clean minimal style */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">מידת טבעת</h3>
+              <div className="relative">
+                <select
+                  className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 text-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  defaultValue="6"
+                >
+                  <option value="5">5</option>
+                  <option value="5.5">5.5</option>
+                  <option value="6">6</option>
+                  <option value="6.5">6.5</option>
+                  <option value="7">7</option>
+                  <option value="7.5">7.5</option>
+                  <option value="8">8</option>
+                  <option value="8.5">8.5</option>
+                  <option value="9">9</option>
+                  <option value="9.5">9.5</option>
+                  <option value="10">10</option>
+                  <option value="10.5">10.5</option>
+                  <option value="11">11</option>
+                </select>
+                <ChevronDown className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
-            {/* Carat Selection - Enhanced */}
-            <div className="collapsible-section">
-              <div 
-                className="collapsible-header"
-                onClick={() => setCaratExpanded(!caratExpanded)}
-              >
-                <div className="flex items-center gap-2">
-                  <Gem className="help-icon" />
-                  <span className="text-gray-700">בחר/י את גודל הקראט</span>
-                  {selectedCaratIndex >= 0 && availableCarats[selectedCaratIndex] && (
-                    <span className="text-sm text-gray-500">({availableCarats[selectedCaratIndex].carat_weight} קראט נבחר)</span>
-                  )}
-                </div>
-                {caratExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            {/* Metal Color Selection - Clean minimal style */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">צבע מתכת</h3>
+              <div className="flex gap-3">
+                <button
+                  className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: '#F8D1C2' }}
+                  title="זהב ורוד"
+                />
+                <button
+                  className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: '#D4A574' }}
+                  title="זהב צהוב"
+                />
+                <button
+                  className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: '#E8B4A0' }}
+                  title="זהב ורוד בהיר"
+                />
+                <button
+                  className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: '#FFD700' }}
+                  title="זהב"
+                />
+                <button
+                  className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: '#C0C0C0' }}
+                  title="כסף"
+                />
+                <button
+                  className="w-12 h-12 rounded-full border-3 border-gray-800 hover:border-gray-600 transition-colors bg-white"
+                  title="זהב לבן"
+                />
               </div>
-              {caratExpanded && (
-                <div className="p-4 bg-gray-50">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                    {availableCarats.map((carat, index) => (
-                      <button
-                        key={carat.id}
-                        onClick={() => handleCaratChange(index)}
-                        className={`carat-button ${selectedCaratIndex === index ? 'selected' : ''}`}
-                      >
-                        <div className="carat-weight">
-                          {carat.carat_weight} קראט
-                        </div>
-                        <div className={`carat-price ${priceLoading ? 'loading' : ''}`}>
-                          {priceLoading && selectedCaratIndex === index ? (
-                            'מחשב...'
-                          ) : currentPrice && selectedCaratIndex === index ? (
-                            `₪${formatPrice(currentPrice.final_price)}`
-                          ) : (
-                            'לחץ לראות מחיר'
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    המחיר משתנה בהתאם לגודל הקראט. בחר את הגודל המועדף עליך לראות את המחיר המדויק.
-                  </p>
+            </div>
+
+            {/* Carat Selection - Keep core functionality with clean design */}
+            {availableCarats.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">בחירת קראט ({availableCarats.length} אפשרויות)</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {availableCarats.map((carat, index) => (
+                    <button
+                      key={carat.carat_pricing_id}
+                      onClick={() => handleCaratChange(index)}
+                      className={`p-3 border-2 rounded-lg text-center transition-all ${
+                        selectedCaratIndex === index
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      <div className="font-semibold">{carat.carat_weight}</div>
+                      <div className="text-sm text-gray-500">
+                        {priceLoading && selectedCaratIndex === index ? 'מחשב...' : ''}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Price Display - Clean style like the target image */}
+            <div className="mb-8">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-gray-900">
+                  {currentPrice ? `₪${formatPrice(currentPrice)}` : '₪8,750'}
+                </span>
+                <span className="text-lg text-gray-500">(כולל מע"מ ומשלוח חינם)</span>
+              </div>
+              {availableCarats.length > 0 && selectedCaratIndex >= 0 && (
+                <div className="text-sm text-gray-600 mt-2">
+                  קראט: {availableCarats[selectedCaratIndex]?.carat_weight} | מתכת: {selectedMetal} | צבע לבן | מידה: 6
                 </div>
               )}
             </div>
@@ -535,63 +575,6 @@ const ProductDetail = () => {
                     <span>צורה</span>
                   </div>
                   <div className="spec-value">{product.shape}</div>
-                </div>
-              )}
-            </div>
-
-            {/* Ring Size Selection - Collapsible */}
-            <div className="collapsible-section">
-              <div 
-                className="collapsible-header"
-                onClick={() => setSizeExpanded(!sizeExpanded)}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-700">מידת טבעת</span>
-                </div>
-                {sizeExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </div>
-              {sizeExpanded && (
-                <div className="p-4 bg-gray-50">
-                  <select className="w-full p-3 border border-gray-300 rounded-md">
-                    <option>בחר מידה</option>
-                    <option>50</option>
-                    <option>52</option>
-                    <option>54</option>
-                    <option>56</option>
-                    <option>58</option>
-                    <option>60</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Dynamic Price Display */}
-            <div className="py-6 border-t border-gray-100">
-              {currentPrice ? (
-                <div className="price-display">
-                  {currentPrice.discount_percentage > 0 && (
-                    <>
-                      <div className="discount-badge">
-                        חסכון {currentPrice.discount_percentage}%
-                      </div>
-                      <div className="original-price">
-                        ₪{formatPrice(currentPrice.calculated_price)}
-                      </div>
-                    </>
-                  )}
-                  <div className="current-price">
-                    ₪{formatPrice(currentPrice.final_price)}
-                  </div>
-                  <div className="carat-info">
-                    מחיר עבור {selectedCaratIndex >= 0 && availableCarats[selectedCaratIndex] ? availableCarats[selectedCaratIndex].carat_weight : ''} קראט • כולל מע"ם
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="text-lg text-gray-600 mb-2">
-                    בחר גודל קראט לראות מחיר
-                  </div>
-                  <div className="text-gray-500 text-sm">המחיר יעודכן אוטומטית</div>
                 </div>
               )}
             </div>
@@ -664,33 +647,58 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Related Products - Minimal */}
+        {/* Category Suggestions - Clean & Minimal */}
         {relatedProducts.length > 0 && (
-          <div className="border-t border-gray-100 p-6 bg-white mt-8">
-            <h2 className="text-xl font-light text-gray-900 text-center mb-6">מוצרים דומים</h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {relatedProducts.map((relatedProduct) => (
-                <Link
-                  key={relatedProduct.id}
-                  to={`/products/${relatedProduct.id}`}
-                  className="block border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors"
-                >
-                  <ProductImageGallery 
-                    images={relatedProduct.images || relatedProduct.image_url} 
-                    productName={relatedProduct.name}
-                    className="w-full h-40"
-                    showNavigation={false}
-                  />
-                  
-                  <div className="p-3">
-                    <h3 className="text-sm text-gray-900 mb-2 line-clamp-2">{relatedProduct.name}</h3>
-                    <div className="text-lg font-semibold text-gray-900">
-                      אחל מ ₪{(relatedProduct.price || 0).toLocaleString()}
+          <div className="mt-16 py-8">
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-light text-gray-900">עוד מהקטגוריה</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {relatedProducts.slice(0, 8).map((relatedProduct) => (
+                  <Link
+                    key={relatedProduct.id}
+                    to={`/products/${relatedProduct.id}`}
+                    className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 relative"
+                  >
+                    {/* Heart Icon */}
+                    <button className="absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
+                      <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                    </button>
+                    
+                    <div className="aspect-square overflow-hidden bg-gray-50">
+                      <ProductImageGallery 
+                        images={relatedProduct.images || relatedProduct.image_url} 
+                        productName={relatedProduct.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        showNavigation={false}
+                      />
                     </div>
-                  </div>
-                </Link>
-              ))}
+                    
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 leading-relaxed">
+                        {relatedProduct.name}
+                      </h3>
+                      <div className="text-lg font-semibold text-amber-600">
+                        ₪{(relatedProduct.price || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              
+              {product.category && (
+                <div className="text-center mt-8">
+                  <Link 
+                    to={`/products?category=${product.category.id}`}
+                    className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-full font-medium transition-colors shadow-md hover:shadow-lg"
+                  >
+                    <Diamond className="w-5 h-5" />
+                    צפה בכל המוצרים בקטגוריה
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

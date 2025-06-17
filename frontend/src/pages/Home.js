@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { getProducts, getFeaturedProducts, getDiscountedProducts, getCategories } from '../utils/api';
 import { Diamond, Sparkles, Shield, Award, ArrowLeft, Star, Phone, Mail, Leaf, Heart, ChevronDown, Play, Eye, Gem, Zap, TrendingUp, MapPin, Clock, Award as AwardIcon, Settings, ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Import Swiper React components
@@ -40,9 +41,12 @@ const Home = () => {
       clearTimeout(scrollTimeoutRef.current);
     }
     
+    // Use different throttling for mobile vs desktop
+    const throttleDelay = window.innerWidth <= 768 ? 100 : 32; // Slower on mobile for better performance
+    
     scrollTimeoutRef.current = setTimeout(() => {
       setScrollY(window.scrollY);
-    }, 32); // Reduced frequency to ~30fps for better performance
+    }, throttleDelay);
   }, []);
 
   // Intersection Observer for performance
@@ -69,7 +73,7 @@ const Home = () => {
   const fetchFeaturedProducts = useCallback(async () => {
     try {
       console.log('Fetching featured products...');
-      const response = await axios.get('/products');
+      const response = await axios.get('/api/products');
       const featured = response.data.slice(0, 6);
       console.log('Featured products loaded:', featured.length);
       setFeaturedProducts(featured);
@@ -81,14 +85,14 @@ const Home = () => {
   const fetchSelectedProducts = useCallback(async () => {
     try {
       console.log('Fetching selected products...');
-      const response = await axios.get('/products/featured?limit=6');
+              const response = await axios.get('/api/products/featured?limit=6');
       console.log('Selected products response:', response.data);
       setSelectedProducts(response.data);
     } catch (error) {
       console.error('Error fetching featured products:', error);
       // Fallback to regular products if featured endpoint fails
       try {
-        const fallbackResponse = await axios.get('/products');
+        const fallbackResponse = await axios.get('/api/products');
         const fallbackData = fallbackResponse.data.slice(0, 6);
         console.log('Using fallback products:', fallbackData.length);
         setSelectedProducts(fallbackData);
@@ -101,14 +105,14 @@ const Home = () => {
   const fetchDiscountedProducts = useCallback(async () => {
     try {
       console.log('Fetching discounted products...');
-      const response = await axios.get('/products/discounted?limit=8');
+      const response = await axios.get('/api/products/discounted?limit=8');
       console.log('Discounted products response:', response.data);
       setDiscountedProducts(response.data);
     } catch (error) {
       console.error('Error fetching discounted products:', error);
       // Fallback to regular products
       try {
-        const fallbackResponse = await axios.get('/products');
+        const fallbackResponse = await axios.get('/api/products');
         const fallbackData = fallbackResponse.data.slice(0, 8);
         console.log('Using fallback discounted products:', fallbackData.length);
         setDiscountedProducts(fallbackData);
@@ -121,7 +125,7 @@ const Home = () => {
   const fetchCategories = useCallback(async () => {
     try {
       console.log('Fetching categories...');
-      const response = await axios.get('/categories');
+      const response = await axios.get('/api/categories');
       console.log('Categories loaded:', response.data.length);
       setCategories(response.data);
     } catch (error) {
@@ -334,9 +338,10 @@ const Home = () => {
         /* Alternative hero image sizing for better display */
         @media (max-width: 768px) {
           .hero-image {
-            background-size: contain;
+            background-size: cover;
             background-position: center center;
-            min-height: 50vh;
+            min-height: 60vh;
+            width: 100%;
           }
         }
         
@@ -445,7 +450,7 @@ const Home = () => {
           
           /* Reduce scroll sensitivity for title gradient on mobile */
           .diamond-gradient-title.scroll-controlled {
-            background-position: ${Math.min(Math.max(scrollY * 0.02, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.015, 0), 100)}%;
+            background-position: ${Math.min(Math.max(scrollY * 0.0002, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.0001, 0), 100)}%;
           }
 
           /* Fix mobile layout overflow */
@@ -486,7 +491,7 @@ const Home = () => {
           
           /* Further reduce scroll sensitivity on small screens */
           .diamond-gradient-title.scroll-controlled {
-            background-position: ${Math.min(Math.max(scrollY * 0.01, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.008, 0), 100)}%;
+            background-position: ${Math.min(Math.max(scrollY * 0.0001, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.00005, 0), 100)}%;
           }
           
           /* Make hero section more mobile-friendly */
@@ -700,14 +705,39 @@ const Home = () => {
           animation: luxuryShimmer 4s ease-in-out infinite;
           text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
           filter: drop-shadow(0 4px 8px rgba(212, 175, 55, 0.3));
+          font-family: 'Frank Ruhl Libre', 'Heebo', serif;
           font-weight: 700;
           letter-spacing: 0.02em;
           will-change: background-position;
         }
         
+        /* Motion-reduce support for title animation */
+        @media (prefers-reduced-motion: reduce) {
+          .diamond-gradient-title {
+            animation: none !important;
+            background-position: 50% 50% !important;
+            background-size: 100% 100% !important;
+            background: linear-gradient(135deg, #2c2c2c 0%, #d4af37 50%, #2c2c2c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Frank Ruhl Libre', 'Heebo', serif;
+            font-weight: 700;
+          }
+          
+          .diamond-gradient-title.scroll-controlled {
+            background-position: 50% 50% !important;
+            animation: none !important;
+            font-family: 'Frank Ruhl Libre', 'Heebo', serif;
+            font-weight: 700;
+          }
+        }
+        
         .diamond-gradient-title.scroll-controlled {
           animation: none;
-          background-position: ${Math.min(Math.max(scrollY * 0.05, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.03, 0), 100)}%;
+          background-position: ${Math.min(Math.max(scrollY * 0.002, 0), 100)}% ${Math.min(Math.max(50 + scrollY * 0.001, 0), 100)}%;
+          font-family: 'Frank Ruhl Libre', 'Heebo', serif;
+          font-weight: 700;
         }
         
         @keyframes luxuryShimmer {
@@ -883,16 +913,18 @@ const Home = () => {
       </section>
 
       {/* 2. Engagement Ring Carousel */}
-      <EngagementRingCarousel />
+      <div ref={featuredSectionRef}>
+        <EngagementRingCarousel />
+      </div>
 
       {/* 3. Jewelry Categories Section */}
       <section className="py-24 bg-gradient-to-br from-white via-gray-50 to-white luxury-section">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-right mb-16">
+          <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-elegant mb-8 luxury-text">
               עולם תכשיטי היהלומים של LIBI DIAMONDS
             </h2>
-            <div className="section-divider w-32 mb-8 mr-0" />
+            <div className="section-divider w-32 mb-8 mx-auto" />
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
@@ -966,7 +998,7 @@ const Home = () => {
           </div>
 
           {/* Call to Action */}
-          <div className="mt-16 text-right">
+          <div className="mt-16 text-center">
             <Link to="/categories" className="elegant-button px-8 py-4 rounded-full text-lg font-semibold inline-block transform transition-all duration-300 hover:scale-105">
               צפייה בכל הקטגוריות
             </Link>
@@ -1076,11 +1108,11 @@ const Home = () => {
       {/* 5. Discounted Jewelry - Row of Items */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-right mb-16">
+          <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-elegant mb-8">
-              תכשיטים מוזלים
+              Sale
             </h2>
-            <div className="section-divider w-32 mb-8 mr-0" />
+            <div className="section-divider w-32 mb-8 mx-auto" />
           </div>
 
           <div className="overflow-x-auto md:overflow-x-visible">
@@ -1166,11 +1198,11 @@ const Home = () => {
       {/* 6. Blog Section */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-right mb-16">
+          <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-elegant mb-8 luxury-text">
               הבלוג שלנו
             </h2>
-            <div className="section-divider w-32 mb-8 mr-0" />
+            <div className="section-divider w-32 mb-8 mx-auto" />
           </div>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -1247,7 +1279,7 @@ const Home = () => {
             })}
           </div>
 
-          <div className="text-right mt-12">
+          <div className="text-center mt-12">
             <Link 
               to="/blog" 
               className="elegant-button px-8 py-4 rounded-full text-lg font-medium inline-flex items-center"
@@ -1262,11 +1294,11 @@ const Home = () => {
       {/* 7. Our Customers - What They Say */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-right mb-16">
+          <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-elegant mb-8 luxury-text">
               מה אומרים עלינו בגוגל
             </h2>
-            <div className="section-divider w-32 mb-8 mr-0" />
+            <div className="section-divider w-32 mb-8 mx-auto" />
           </div>
 
           {/* Optimized Testimonials Swiper */}

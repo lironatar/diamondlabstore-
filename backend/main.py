@@ -92,6 +92,13 @@ def read_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_d
     categories = crud.get_categories(db, skip=skip, limit=limit)
     return categories
 
+@app.get("/api/categories/{category_id}", response_model=schemas.CategoryResponse)
+def read_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = crud.get_category(db, category_id=category_id)
+    if not db_category:
+        raise HTTPException(status_code=404, detail="קטגוריה לא נמצאה")
+    return db_category
+
 @app.post("/api/categories", response_model=schemas.CategoryResponse)
 def create_category(
     category: schemas.CategoryCreate, 
@@ -474,11 +481,24 @@ async def upload_file(
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="סוג קובץ לא נתמך. יש להעלות תמונות בלבד")
     
+    # Check file size (5MB limit)
+    max_size = 5 * 1024 * 1024  # 5MB
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()
+    file.file.seek(0)  # Reset to beginning
+    
+    if file_size > max_size:
+        raise HTTPException(status_code=400, detail="קובץ גדול מדי. מקסימום 5MB")
+    
+    if file_size == 0:
+        raise HTTPException(status_code=400, detail="קובץ ריק")
+    
     # Generate unique filename
     file_extension = os.path.splitext(file.filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_extension}"
     file_path = uploads_dir / unique_filename
     
+    try:
     # Save file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -486,6 +506,11 @@ async def upload_file(
     # Return file URL
     file_url = f"/uploads/{unique_filename}"
     return {"url": file_url, "filename": unique_filename}
+    except Exception as e:
+        # Clean up file if it was created
+        if file_path.exists():
+            os.remove(file_path)
+        raise HTTPException(status_code=500, detail=f"שגיאה בשמירת הקובץ: {str(e)}")
 
 # Route to serve React build files (images, favicon, etc.) from root path
 @app.get("/{filename}")

@@ -20,8 +20,8 @@ const AdminProductCarats = () => {
     try {
       setIsLoading(true);
       const [productsRes, caratPricingRes] = await Promise.all([
-        axios.get('/products'),
-        axios.get('/carat-pricing')
+        axios.get('/api/products'),
+        axios.get('/api/carat-pricing')
       ]);
       
       setProducts(productsRes.data);
@@ -36,7 +36,7 @@ const AdminProductCarats = () => {
 
   const fetchProductCarats = async (productId) => {
     try {
-      const response = await axios.get(`/products/${productId}/carats`);
+      const response = await axios.get(`/api/products/${productId}/carats`);
       setProductCarats(response.data);
     } catch (error) {
       console.error('Error fetching product carats:', error);
@@ -51,7 +51,7 @@ const AdminProductCarats = () => {
 
   const addCaratToProduct = async (caratId) => {
     try {
-      await axios.post(`/products/${selectedProduct.id}/carats`, {
+      await axios.post(`/api/products/${selectedProduct.id}/carats`, {
         carat_pricing_id: caratId
       });
       toast.success('קראט נוסף למוצר בהצלחה');
@@ -64,7 +64,7 @@ const AdminProductCarats = () => {
 
   const removeCaratFromProduct = async (caratId) => {
     try {
-      await axios.delete(`/products/${selectedProduct.id}/carats/${caratId}`);
+      await axios.delete(`/api/products/${selectedProduct.id}/carats/${caratId}`);
       toast.success('קראט הוסר מהמוצר בהצלחה');
       fetchProductCarats(selectedProduct.id);
     } catch (error) {
@@ -75,7 +75,7 @@ const AdminProductCarats = () => {
 
   const setDefaultCarat = async (caratId) => {
     try {
-      await axios.put(`/products/${selectedProduct.id}/default-carat`, {
+      await axios.put(`/api/products/${selectedProduct.id}/default-carat`, {
         carat_pricing_id: caratId
       });
       toast.success('קראט ברירת מחדל עודכן בהצלחה');
@@ -88,7 +88,7 @@ const AdminProductCarats = () => {
 
   const addAllCarats = async () => {
     try {
-      await axios.post(`/products/${selectedProduct.id}/carats/all`);
+      await axios.post(`/api/products/${selectedProduct.id}/carats/all`);
       toast.success('כל הקראטים נוספו למוצר בהצלחה');
       fetchProductCarats(selectedProduct.id);
     } catch (error) {

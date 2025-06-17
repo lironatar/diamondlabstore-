@@ -16,6 +16,12 @@ const CategoryImageUpload = ({
   const [preview, setPreview] = useState(value || '');
   const fileInputRef = useRef(null);
 
+  // Sync preview with value prop changes
+  React.useEffect(() => {
+    console.log('CategoryImageUpload: value prop changed:', value);
+    setPreview(value || '');
+  }, [value]);
+
   const validateFile = (file) => {
     if (!file) {
       toast.error('לא נבחר קובץ');
@@ -44,7 +50,7 @@ const CategoryImageUpload = ({
     formData.append('file', file);
 
     try {
-      const response = await axios.post('/upload', formData, {
+      const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -64,15 +70,22 @@ const CategoryImageUpload = ({
   const handleFileSelect = async (file) => {
     if (!file || disabled) return;
 
+    let objectUrl = null;
     try {
       // Create immediate preview
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
+      objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
 
       // Upload file
       const imageUrl = await uploadImage(file);
       
       if (imageUrl) {
+        // Clean up object URL since we have server URL now
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
+        
         // Update with server URL
         const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:8001${imageUrl}`;
         setPreview(fullImageUrl);
@@ -81,10 +94,23 @@ const CategoryImageUpload = ({
         if (onChange) {
           onChange(imageUrl);
         }
+        
+        console.log('Upload successful:', imageUrl);
       }
     } catch (error) {
+      console.error('Error in handleFileSelect:', error);
+      
+      // Clean up object URL on error
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      
       // Reset preview on error
       setPreview(value || '');
+      
+      // Show user-friendly error message
+      const errorMessage = error.response?.data?.detail || error.message || 'שגיאה בהעלאת התמונה';
+      toast.error(`העלאת התמונה נכשלה: ${errorMessage}`);
     }
   };
 
@@ -147,9 +173,9 @@ const CategoryImageUpload = ({
         }
         
         .upload-area {
-          border: 2px dashed rgba(212, 175, 55, 0.3);
+          border: 2px dashed rgba(200, 200, 200, 0.5);
           border-radius: 16px;
-          background: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.9);
           transition: all 0.3s ease;
           cursor: pointer;
           position: relative;
@@ -157,15 +183,15 @@ const CategoryImageUpload = ({
         }
         
         .upload-area:hover:not(.disabled) {
-          border-color: rgba(212, 175, 55, 0.5);
-          background: rgba(255, 255, 255, 0.9);
+          border-color: rgba(150, 150, 150, 0.7);
+          background: rgba(255, 255, 255, 1);
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
         .upload-area.dragover {
-          border-color: #d4af37;
-          background: rgba(212, 175, 55, 0.1);
+          border-color: #888;
+          background: rgba(240, 240, 240, 0.3);
           transform: scale(1.02);
         }
         
@@ -183,14 +209,14 @@ const CategoryImageUpload = ({
         }
         
         .upload-content {
-          padding: 24px;
+          padding: 16px;
           text-align: center;
           color: #6b7280;
         }
         
         .upload-icon {
-          margin: 0 auto 16px;
-          color: #d4af37;
+          margin: 0 auto 8px;
+          color: #6b7280;
         }
         
         .upload-icon.uploading {
@@ -233,13 +259,13 @@ const CategoryImageUpload = ({
           left: 0;
           right: 0;
           height: 4px;
-          background: rgba(212, 175, 55, 0.2);
+          background: rgba(200, 200, 200, 0.3);
           overflow: hidden;
         }
         
         .upload-progress-bar {
           height: 100%;
-          background: linear-gradient(90deg, #d4af37, #f4e4bc);
+          background: linear-gradient(90deg, #4f46e5, #7c3aed);
           animation: progress 1.5s ease-in-out infinite;
         }
         

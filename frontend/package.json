@@ -27,11 +27,31 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set PORT=3001 && react-scripts start",
+    "start": "react-scripts start",
+    "start:dev": "cross-env NODE_ENV=development PORT=3001 react-scripts start",
+    "start:staging": "cross-env NODE_ENV=staging REACT_APP_ENV=staging PORT=3000 react-scripts start",
+    "start:production": "cross-env NODE_ENV=production REACT_APP_ENV=production PORT=3000 react-scripts start",
+    "start:port8001": "cross-env PORT=3001 REACT_APP_API_BASE_URL=http://localhost:8001 react-scripts start",
+    "start:port9000": "cross-env PORT=3001 REACT_APP_API_BASE_URL=http://localhost:9000 react-scripts start",
+    "start:mobile": "cross-env HOST=0.0.0.0 PORT=3001 react-scripts start",
     "build": "react-scripts build",
+    "build:dev": "cross-env NODE_ENV=development react-scripts build",
+    "build:staging": "cross-env NODE_ENV=staging REACT_APP_ENV=staging react-scripts build",
+    "build:production": "cross-env NODE_ENV=production REACT_APP_ENV=production react-scripts build",
     "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:ci": "cross-env CI=true react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
-    "scan": "npx react-scan@latest http://localhost:3001"
+    "scan": "npx react-scan@latest http://localhost:3001",
+    "scan:production": "npx react-scan@latest http://localhost:3000",
+    "test-config": "node test-config.js",
+    "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
+    "serve": "serve -s build -l 3000",
+    "serve:staging": "serve -s build -l 3000",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md}",
+    "validate": "npm run lint && npm run test:ci && npm run build"
   },
   "eslintConfig": {
     "extends": [
@@ -54,6 +74,9 @@
   "proxy": "http://localhost:8001",
   "devDependencies": {
     "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17"
+    "@types/react-dom": "^18.2.17",
+    "cross-env": "^7.0.3",
+    "serve": "^14.2.1",
+    "source-map-explorer": "^2.5.3"
   }
 }

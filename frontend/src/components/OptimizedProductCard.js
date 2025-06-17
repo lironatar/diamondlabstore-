@@ -2,6 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { Heart, ShoppingCart, Eye } from 'lucide-react';
 import MemoizedLink from './MemoizedLink';
 import StarRating from './StarRating';
+import { getFullImageUrl } from '../utils/imageUtils';
 
 // Memoized Product Card Component
 const OptimizedProductCard = memo(({ 
@@ -13,20 +14,16 @@ const OptimizedProductCard = memo(({
   className = ""
 }) => {
   
-  // Memoize the product image URL
+  // Memoize the product image URL using centralized utility
   const imageUrl = useMemo(() => {
     if (product.images && product.images.length > 0) {
       const firstImage = product.images[0];
       if (typeof firstImage === 'string') {
-        return firstImage.startsWith('http') ? firstImage : `http://localhost:8001${firstImage}`;
+        return getFullImageUrl(firstImage);
       }
-      return firstImage.image_url?.startsWith('http') 
-        ? firstImage.image_url 
-        : `http://localhost:8001${firstImage.image_url}`;
+      return getFullImageUrl(firstImage.image_url);
     }
-    return product.image_url?.startsWith('http') 
-      ? product.image_url 
-      : `http://localhost:8001${product.image_url}`;
+    return getFullImageUrl(product.image_url);
   }, [product.images, product.image_url]);
 
   // Memoize formatted price

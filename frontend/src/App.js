@@ -111,6 +111,13 @@ function App() {
                 
                 <Toaster 
                   position="top-center"
+                  containerStyle={{
+                    position: 'fixed',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 9999,
+                  }}
                   toastOptions={{
                     duration: 4000,
                     style: {
@@ -123,6 +130,8 @@ function App() {
                       border: '1px solid rgba(212, 175, 55, 0.3)',
                       borderRadius: '16px',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                      position: 'relative',
+                      zIndex: 10000,
                     },
                     success: {
                       style: {

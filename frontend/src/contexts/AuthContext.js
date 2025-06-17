@@ -13,7 +13,7 @@ export const useAuth = () => {
 };
 
 // Use environment variable or fallback to localhost
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await axios.get('/auth/me');
+        const response = await axios.get('/api/auth/me');
         setUser(response.data);
       } catch (error) {
         localStorage.removeItem('token');
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/api/auth/login', { email, password });
       const { access_token, user: userData } = response.data;
       
       localStorage.setItem('token', access_token);
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/auth/register', userData);
+      const response = await axios.post('/api/auth/register', userData);
       toast.success('הרשמה בוצעה בהצלחה! אנא התחבר/י');
       return { success: true };
     } catch (error) {

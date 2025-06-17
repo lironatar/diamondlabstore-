@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Diamond, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getFullImageUrl } from '../utils/imageUtils';
 
 const ProductImageGallery = React.memo(({ images = [], productName = '', className = '', showNavigation = true }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -45,9 +46,7 @@ const ProductImageGallery = React.memo(({ images = [], productName = '', classNa
         imageUrl = '';
       }
       
-      const fullImageUrl = imageUrl.startsWith('http') 
-        ? imageUrl 
-        : `http://localhost:8001${imageUrl}`;
+      const fullImageUrl = getFullImageUrl(imageUrl);
       
       return {
         id: index,
@@ -268,33 +267,11 @@ const ProductImageGallery = React.memo(({ images = [], productName = '', classNa
         {/* Navigation Arrows (only if multiple images) */}
         {/* Removed navigation arrows as per requirements */}
 
-        {/* Image Counter */}
-        {showNavigation && processedImages.length > 1 && (
-          <div className="image-counter">
-            {currentImageIndex + 1} / {processedImages.length}
-          </div>
-        )}
+        {/* Image Counter - REMOVED */}
 
-        {/* Dots Indicator (always show if multiple images) */}
-        {processedImages.length > 1 && (
-          <div className="dots-container">
-            {processedImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToImage(index)}
-                className={`dot ${index === currentImageIndex ? 'active' : ''}`}
-                aria-label={`עבור לתמונה ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
+        {/* Dots Indicator - REMOVED */}
 
-        {/* Hover Indicator */}
-        {!showNavigation && processedImages.length > 1 && (
-          <div className="hover-indicator">
-            +{processedImages.length - 1}
-          </div>
-        )}
+        {/* Hover Indicator - REMOVED */}
       </div>
 
       {/* Thumbnails (only if multiple images) */}

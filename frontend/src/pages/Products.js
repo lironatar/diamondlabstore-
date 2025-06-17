@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Filter, Grid, List, Star, Eye, Heart, ChevronDown, Diamond, Sparkles, ShoppingBag } from 'lucide-react';
+import { Menu } from '@headlessui/react';
 import ProductImageGallery from '../components/ProductImageGallery';
 import ColorSelector from '../components/ColorSelector';
 import { useFavorites } from '../hooks/useFavorites';
@@ -10,12 +11,13 @@ import { useCart } from 'react-use-cart';
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [currentCategory, setCurrentCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('name');
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('popular');
+
   
   // Track selected variants for each product
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -31,10 +33,20 @@ const Products = () => {
     fetchCategories();
   }, [selectedCategory]);
 
+  // Update current category when selectedCategory or categories change
+  useEffect(() => {
+    if (selectedCategory && categories.length > 0) {
+      const category = categories.find(c => c.id.toString() === selectedCategory);
+      setCurrentCategory(category || null);
+    } else {
+      setCurrentCategory(null);
+    }
+  }, [selectedCategory, categories]);
+
   const fetchProducts = async () => {
     try {
       const params = selectedCategory ? { category_id: selectedCategory } : {};
-      const response = await axios.get('/products', { params });
+      const response = await axios.get('/api/products', { params });
       setProducts(response.data);
       
       // Initialize selected variants (default or first variant for each product)
@@ -55,7 +67,7 @@ const Products = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/categories');
+      const response = await axios.get('/api/categories');
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -97,7 +109,12 @@ const Products = () => {
           return a.price - b.price;
         case 'price-high':
           return b.price - a.price;
-        case 'name':
+        case 'newest':
+          // Sort by creation date (newest first) - assuming there's a created_at field
+          return new Date(b.created_at || b.id) - new Date(a.created_at || a.id);
+        case 'popular':
+          // Sort by popularity - assuming there's a popularity field or using view count
+          return (b.popularity || b.view_count || 0) - (a.popularity || a.view_count || 0);
         default:
           return a.name.localeCompare(b.name);
       }
@@ -107,7 +124,7 @@ const Products = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-rose-50" dir="rtl">
         <div className="glass-effect p-8 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse">
             <Diamond className="w-8 h-8 text-white" />
           </div>
           <p className="text-gray-600 font-light">טוען מוצרים...</p>
@@ -122,7 +139,7 @@ const Products = () => {
       <style jsx="true">{`
         .glass-card {
           background: rgba(255, 255, 255, 0.95);
-          border: 1px solid rgba(212, 175, 55, 0.1);
+          border: 1px solid rgba(200, 200, 200, 0.2);
           border-radius: 16px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
@@ -185,7 +202,7 @@ const Products = () => {
         .product-price {
           font-size: 18px;
           font-weight: 600;
-          color: #d4af37;
+          color: #2563eb;
           margin: 0;
           background: transparent;
         }
@@ -222,8 +239,8 @@ const Products = () => {
         }
         
         .heart-icon.filled {
-          fill: #d4af37;
-          stroke: #d4af37;
+          fill: #e11d48;
+          stroke: #e11d48;
         }
         
         .heart-icon:not(.filled) {
@@ -251,19 +268,19 @@ const Products = () => {
         }
         
         .add-to-cart-button {
-          background: linear-gradient(135deg, #d4af37 0%, #f4e4bc 50%, #d4af37 100%);
+          background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #2563eb 100%);
           border: none;
-          color: #8b5a00;
+          color: white;
           font-weight: 600;
           font-size: 14px;
-          padding: 10px 20px;
+          padding: 8px 16px;
           border-radius: 20px;
           cursor: pointer;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+          box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           width: 100%;
           justify-content: center;
           letter-spacing: 0.5px;
@@ -271,8 +288,247 @@ const Products = () => {
         
         .add-to-cart-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-          background: linear-gradient(135deg, #e6c558 0%, #f4e4bc 50%, #e6c558 100%);
+          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+          background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #1d4ed8 100%);
+        }
+
+        /* Mobile-specific styles matching the design */
+        .mobile-product-card {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          position: relative;
+          z-index: 1 !important;
+        }
+        
+        .mobile-product-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .mobile-image-container {
+          position: relative;
+          background: #f8f9fa;
+          border-radius: 12px 12px 0 0;
+          overflow: hidden;
+        }
+        
+        .mobile-heart-button {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          width: 32px;
+          height: 32px;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(8px);
+          border: none;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          z-index: 10;
+        }
+        
+        .mobile-heart-button:hover {
+          background: rgba(255, 255, 255, 1);
+          transform: scale(1.1);
+        }
+        
+        .mobile-heart-icon {
+          width: 16px;
+          height: 16px;
+          transition: all 0.3s ease;
+        }
+        
+        .mobile-heart-icon.filled {
+          fill: #e11d48;
+          stroke: #e11d48;
+        }
+        
+        .mobile-heart-icon:not(.filled) {
+          fill: none;
+          stroke: #6b7280;
+          stroke-width: 2;
+        }
+        
+        .mobile-content {
+          padding: 12px;
+          text-align: center;
+          background: white;
+        }
+        
+        .mobile-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #2c3e50;
+          margin-bottom: 8px;
+          line-height: 1.3;
+          min-height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        
+        .mobile-price {
+          font-size: 16px;
+          font-weight: 600;
+          color: #2563eb;
+          margin: 0;
+          text-align: center;
+        }
+        
+        /* Mobile breakpoint adjustments */
+        @media (max-width: 768px) {
+          .mobile-product-card {
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          .mobile-image-container {
+            border-radius: 8px 8px 0 0;
+          }
+          
+          .mobile-content {
+            padding: 8px 6px;
+          }
+          
+          .mobile-title {
+            font-size: 13px;
+            min-height: 30px;
+            margin-bottom: 4px;
+          }
+          
+          .mobile-price {
+            font-size: 15px;
+            font-weight: 700;
+          }
+          
+          .mobile-heart-button {
+            top: 6px;
+            left: 6px;
+            width: 28px;
+            height: 28px;
+          }
+          
+          .mobile-heart-icon {
+            width: 14px;
+            height: 14px;
+          }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+          .mobile-title {
+            font-size: 12px;
+            min-height: 30px;
+          }
+          
+          .mobile-price {
+            font-size: 14px;
+          }
+          
+          .mobile-content {
+            padding: 8px 6px;
+          }
+        }
+
+        /* Headless UI Filter Dropdown Styles */
+        .filter-container {
+          position: relative;
+          z-index: 10;
+        }
+        
+        .filter-button {
+          background: rgba(255, 255, 255, 0.95);
+          border: 2px solid rgba(200, 200, 200, 0.3);
+          border-radius: 12px;
+          padding: 10px 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 14px;
+          color: #2c3e50;
+          font-weight: 500;
+          min-height: 40px;
+          flex: 1;
+        }
+        
+        @media (min-width: 768px) {
+          .filter-button {
+            flex: none;
+            width: auto;
+            min-height: auto;
+          }
+        }
+        
+        .filter-button:hover {
+          background: rgba(255, 255, 255, 1);
+          border-color: #6b7280;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-menu {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: white;
+          border: 1px solid rgba(200, 200, 200, 0.3);
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          z-index: 50;
+          min-width: 250px;
+          padding: 6px 0;
+        }
+        
+        .filter-section {
+          padding: 6px 0;
+          border-bottom: 1px solid rgba(200, 200, 200, 0.2);
+        }
+        
+        .filter-section:last-child {
+          border-bottom: none;
+        }
+        
+        .filter-option {
+          width: 100%;
+          padding: 10px 14px;
+          text-align: right;
+          border: none;
+          background: none;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          font-size: 14px;
+          color: #2c3e50;
+          display: block;
+          text-decoration: none;
+        }
+        
+        .filter-option:visited {
+          color: #2c3e50;
+        }
+        
+        .filter-option:hover {
+          background: rgba(240, 240, 240, 0.8);
+        }
+        
+        .filter-option.active {
+          background: rgba(37, 99, 235, 0.1);
+          color: #2563eb;
+          font-weight: 500;
         }
         
         .elegant-input {
@@ -405,14 +661,17 @@ const Products = () => {
         .hero-banner {
           position: relative;
           height: 300px;
-          background: linear-gradient(135deg, rgba(212, 175, 55, 0.8), rgba(184, 134, 11, 0.9)), 
-                      url('https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.8), rgba(184, 134, 11, 0.9));
           background-size: cover;
           background-position: center;
           display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
+        }
+        
+        .hero-banner.with-image {
+          background-attachment: fixed;
         }
         
         .hero-content {
@@ -422,228 +681,185 @@ const Products = () => {
           padding: 0 2rem;
         }
 
-        .filter-dropdown {
-          position: relative;
-          display: inline-block;
-        }
-
-        .filter-button {
-          background: rgba(255, 255, 255, 0.9);
-          border: 2px solid rgba(212, 175, 55, 0.2);
-          border-radius: 12px;
-          padding: 0.75rem 1rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 0.9rem;
-          color: #2c3e50;
-        }
-
-        .filter-button:hover {
-          background: rgba(255, 255, 255, 1);
-          border-color: #d4af37;
-          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
-        }
-
-        .filter-menu {
-          position: absolute;
-          top: 100%;
-          right: 0;
-          background: white;
-          border: 1px solid rgba(212, 175, 55, 0.2);
-          border-radius: 12px;
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-          z-index: 10;
-          min-width: 250px;
-          padding: 0.5rem 0;
-          margin-top: 0.5rem;
-          opacity: 0;
-          transform: translateY(-10px);
-          pointer-events: none;
-          transition: all 0.3s ease;
-        }
-
-        .filter-dropdown:hover .filter-menu,
-        .filter-dropdown.active .filter-menu {
-          opacity: 1;
-          transform: translateY(0);
-          pointer-events: all;
-        }
-
-        .filter-section {
-          padding: 0.5rem 0;
-          border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-        }
-
-        .filter-section:last-child {
-          border-bottom: none;
-        }
-
-        .filter-section-title {
-          padding: 0.5rem 1rem;
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #8b5a00;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .filter-option {
-          padding: 0.75rem 1rem;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-          font-size: 0.9rem;
-          color: #2c3e50;
-        }
-
-        .filter-option:hover {
-          background: rgba(212, 175, 55, 0.1);
-        }
-
-        .filter-option.active {
-          background: rgba(212, 175, 55, 0.2);
-          color: #8b5a00;
-          font-weight: 500;
-        }
+        /* Remove conflicting dropdown styles for Headless UI */
       `}</style>
 
       {/* Hero Banner */}
-      <div className="hero-banner">
+      <div 
+        className={`hero-banner ${currentCategory?.hero_image_url ? 'with-image' : ''}`}
+        style={{
+          backgroundImage: currentCategory?.hero_image_url 
+            ? `url(${currentCategory.hero_image_url.startsWith('http') ? currentCategory.hero_image_url : `http://localhost:8001${currentCategory.hero_image_url}`})`
+            : `url("https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80")`
+        }}
+      >
         <div className="hero-content">
           <h1 className="text-4xl md:text-6xl font-light text-white mb-4">
-            קולקציית היהלומים שלנו
+            {currentCategory ? `קטגוריית ${currentCategory.name}` : 'קולקציית היהלומים שלנו'}
           </h1>
           <p className="text-xl text-white/90 font-light leading-relaxed">
-            גלו את מגוון התכשיטים הייחודיים שלנו
+            {currentCategory 
+              ? (currentCategory.description || `גלו את מגוון ${currentCategory.name} הייחודיים שלנו`)
+              : 'גלו את מגוון התכשיטים הייחודיים שלנו'
+            }
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-16">
-        {/* Compact Filter Section */}
-        <div className="flex justify-between items-center mb-12">
-          <p className="text-gray-600">
-            נמצאו <span className="font-medium text-gold">{filteredProducts.length}</span> מוצרים
-            {selectedCategory && (
-              <span className="font-medium">
-                {' '} בקטגוריה "{categories.find(c => c.id == selectedCategory)?.name}"
-              </span>
-            )}
-          </p>
+      {/* Filter Section - Using Headless UI Menu - Outside main container */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-3 md:pt-12">
+        <div className="flex justify-start items-center gap-2 md:gap-3 mb-3 md:mb-6">
+          {/* Category Selector */}
+          <Menu as="div" className="relative filter-container">
+            <Menu.Button className="filter-button">
+              <span>קטגוריות</span>
+              <ChevronDown className="w-4 h-4" />
+            </Menu.Button>
           
-          <div className="flex items-center gap-4">
-            {/* View Mode Toggle */}
-            <div className="flex glass-card border-0 p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-colors duration-200 ${
-                  viewMode === 'grid' 
-                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
+            <Menu.Items className="filter-menu">
+              {/* Category Options */}
+              <div className="filter-section">
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '' ? 'active' : ''}`}
               >
-                <Grid className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-xl transition-colors duration-200 ${
-                  viewMode === 'list' 
-                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
+                      כל הקטגוריות
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=1"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '1' ? 'active' : ''}`}
               >
-                <List className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Filter Dropdown */}
-            <div className="filter-dropdown">
-              <div 
-                className="filter-button"
-                onClick={() => setFilterOpen(!filterOpen)}
-              >
-                <Filter className="w-4 h-4" />
-                <span>סינון ומיון</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
-              </div>
-              
-              <div className={`filter-menu ${filterOpen ? 'active' : ''}`}>
-                {/* Category Filter */}
-                <div className="filter-section">
-                  <div className="filter-section-title">קטגוריה</div>
-                  <div 
-                    className={`filter-option ${selectedCategory === '' ? 'active' : ''}`}
-                    onClick={() => {
-                      handleCategoryChange('');
-                      setFilterOpen(false);
-                    }}
-                  >
-                    כל הקטגוריות
-                  </div>
-                  {categories.map((category) => (
-                    <div 
-                      key={category.id}
-                      className={`filter-option ${selectedCategory == category.id ? 'active' : ''}`}
-                      onClick={() => {
-                        handleCategoryChange(category.id);
-                        setFilterOpen(false);
-                      }}
+                      טבעות אירוסין
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=2"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '2' ? 'active' : ''}`}
                     >
-                      {category.name}
+                      עגילים
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=3"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '3' ? 'active' : ''}`}
+                    >
+                      שרשרות
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=4"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '4' ? 'active' : ''}`}
+                    >
+                      צמידים
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=5"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '5' ? 'active' : ''}`}
+                    >
+                      טבעות נישואין
+                    </Link>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <Link
+                      to="/products?category=6"
+                      className={`filter-option ${active ? 'bg-gray-50' : ''} ${selectedCategory === '6' ? 'active' : ''}`}
+                    >
+                      סטים
+                    </Link>
+                  )}
+                </Menu.Item>
                     </div>
-                  ))}
-                </div>
+            </Menu.Items>
+          </Menu>
 
-                {/* Sort Options */}
+          {/* Sort Selector */}
+          <Menu as="div" className="relative filter-container">
+            <Menu.Button className="filter-button">
+              <span>מיון לפי</span>
+              <ChevronDown className="w-4 h-4" />
+            </Menu.Button>
+            
+            <Menu.Items className="filter-menu">
+              {/* Sort Options Only */}
                 <div className="filter-section">
-                  <div className="filter-section-title">מיון</div>
-                  <div 
-                    className={`filter-option ${sortBy === 'name' ? 'active' : ''}`}
-                    onClick={() => {
-                      setSortBy('name');
-                      setFilterOpen(false);
-                    }}
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                                          className={`filter-option ${active ? 'bg-gray-50' : ''} ${sortBy === 'popular' ? 'active' : ''}`}
+                      onClick={() => setSortBy('popular')}
+                    >
+                      הכי פופולרי
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                    className={`filter-option ${active ? 'bg-gray-50' : ''} ${sortBy === 'price-low' ? 'active' : ''}`}
+                      onClick={() => setSortBy('price-low')}
                   >
-                    לפי שם
-                  </div>
-                  <div 
-                    className={`filter-option ${sortBy === 'price-low' ? 'active' : ''}`}
-                    onClick={() => {
-                      setSortBy('price-low');
-                      setFilterOpen(false);
-                    }}
+                      מהזול ליקר
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                    className={`filter-option ${active ? 'bg-gray-50' : ''} ${sortBy === 'price-high' ? 'active' : ''}`}
+                      onClick={() => setSortBy('price-high')}
+                    >
+                      מהיקר לזול
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                    className={`filter-option ${active ? 'bg-gray-50' : ''} ${sortBy === 'newest' ? 'active' : ''}`}
+                      onClick={() => setSortBy('newest')}
                   >
-                    מחיר: נמוך לגבוה
+                      תכשיטים חדשים קודם
+                    </button>
+                  )}
+                </Menu.Item>
                   </div>
-                  <div 
-                    className={`filter-option ${sortBy === 'price-high' ? 'active' : ''}`}
-                    onClick={() => {
-                      setSortBy('price-high');
-                      setFilterOpen(false);
-                    }}
-                  >
-                    מחיר: גבוה לנמוך
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </Menu.Items>
+          </Menu>
         </div>
 
         {/* Products Display */}
         {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6" style={{ position: 'relative', zIndex: -1 }}>
             {filteredProducts.map((product) => (
-              <div key={product.id} className="product-card">
+              <div key={product.id} className="mobile-product-card">
                 {/* Image Container */}
-                <div className="product-image-container">
+                <div className="mobile-image-container">
                   <Link to={`/products/${product.id}`}>
                     <ProductImageGallery 
                       images={getProductImages(product)} 
                       productName={product.name}
-                      className="w-full h-80"
+                      className="w-full h-48 md:h-64 lg:h-80"
                       showNavigation={false}
                     />
                   </Link>
@@ -656,13 +872,13 @@ const Products = () => {
                       toggleFavorite(product);
                       openSidebar();
                     }}
-                    className="heart-button"
+                    className="mobile-heart-button"
                   >
-                    <Heart className={`heart-icon ${isFavorite(product.id) ? 'filled' : ''}`} />
+                    <Heart className={`mobile-heart-icon ${isFavorite(product.id) ? 'filled' : ''}`} />
                   </button>
 
-                  {/* Add to Cart Overlay */}
-                  <div className="add-to-cart-overlay">
+                  {/* Add to Cart Overlay - hidden on mobile */}
+                  <div className="add-to-cart-overlay hidden md:block">
                     <button 
                       onClick={(e) => {
                         e.preventDefault();
@@ -678,28 +894,15 @@ const Products = () => {
                 </div>
                 
                 {/* Card Content */}
-                <div className="product-content">
+                <div className="mobile-content">
                   <Link to={`/products/${product.id}`}>
-                    <h3 className="product-title">
+                    <h3 className="mobile-title">
                       {product.name}
                     </h3>
                   </Link>
                   
-                  {/* Color Selector */}
-                  {product.variants && product.variants.length > 0 && (
-                    <div className="mb-3">
-                      <ColorSelector
-                        variants={product.variants}
-                        selectedVariant={selectedVariants[product.id]}
-                        onVariantChange={(variant) => handleVariantChange(product.id, variant)}
-                        size="small"
-                        showLabel={false}
-                      />
-                    </div>
-                  )}
-                  
                   <Link to={`/products/${product.id}`}>
-                    <p className="product-price">
+                    <p className="mobile-price">
                       ₪{(product.price || 0).toLocaleString()}
                     </p>
                   </Link>

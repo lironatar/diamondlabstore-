@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from 'react-use-cart';
 import axios from 'axios';
+import { getProduct, getProductPrice } from '../utils/api';
 import { 
   Heart, 
-  Star, 
   ShoppingBag, 
   Gem, 
   Shield, 
@@ -21,6 +21,7 @@ import { toast } from 'react-hot-toast';
 import ProductImageGallery from '../components/ProductImageGallery';
 import { useFavorites } from '../hooks/useFavorites';
 import PageSEO from '../components/SEO/PageSEO';
+
 
 // Smooth number animation component (inspired by NumberFlow)
 const AnimatedPrice = ({ value, currency = '₪' }) => {
@@ -58,6 +59,7 @@ const ProductDetailSlider = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [availableCarats, setAvailableCarats] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   
   // Selection states
   const [selectedCaratIndex, setSelectedCaratIndex] = useState(0);
@@ -77,8 +79,8 @@ const ProductDetailSlider = () => {
   ];
   
   const ringColors = [
-    { name: 'זהב לבן', value: 'white', color: '#C0C0C0' },
-    { name: 'זהב צהוב', value: 'yellow', color: '#F4D03F' },
+    { name: 'זהב לבן', value: 'white', color: '#E8E8E8' },
+    { name: 'זהב צהוב', value: 'yellow', color: '#FFD700' },
     { name: 'זהב ורוד', value: 'rose', color: '#E8B4A0' }
   ];
   
@@ -90,161 +92,84 @@ const ProductDetailSlider = () => {
   const uniqueCarats = useMemo(() => {
     if (!availableCarats || availableCarats.length === 0) return [];
     
-    const unique = availableCarats.reduce((acc, current) => {
-      const existingIndex = acc.findIndex(item => 
-        parseFloat(item.carat_weight) === parseFloat(current.carat_weight)
-      );
-      
-      if (existingIndex === -1) {
-        acc.push(current);
-      }
-      
-      return acc;
-    }, []);
-    
-    return unique.sort((a, b) => parseFloat(a.carat_weight) - parseFloat(b.carat_weight));
-  }, [availableCarats]);
 
-  // Calculate price with debounce to prevent flickering
-  const calculatePrice = useCallback(async (caratIndex) => {
-    if (!product || !uniqueCarats[caratIndex]) {
-      console.log('No product or carat available for price calculation');
-      return;
-    }
     
-    setPriceLoading(true);
-    const selectedCarat = uniqueCarats[caratIndex];
+    // Use Map to deduplicate by carat_weight, keeping the first occurrence
+    const caratMap = new Map();
     
-    console.log('Calculating price for:', {
-      product: product.id,
-      carat: selectedCarat.carat_weight,
-      metal: selectedMetal,
-      color: selectedColor,
-      size: selectedSize
+    availableCarats.forEach(current => {
+      const weight = parseFloat(current.carat_weight);
+      if (!caratMap.has(weight)) {
+        caratMap.set(weight, {
+          ...current,
+          carat_pricing_id: current.id // Map id to carat_pricing_id for compatibility
+        });
+      }
     });
     
-    try {
-      // Simulate API delay to show smooth transition
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const response = await axios.get(`/products/${id}/price`, {
-        params: { 
-          carat_pricing_id: selectedCarat.carat_pricing_id,
-          metal: selectedMetal,
-          color: selectedColor,
-          size: selectedSize
-        },
-        timeout: 10000,
-        validateStatus: (status) => status >= 200 && status < 500,
-      });
-      
-      console.log('✅ Full API Response:', response);
-      
-      // Enhanced response parsing with multiple field checks
-      let extractedPrice = null;
-      
-      if (response.data) {
-        const priceFields = ['final_price', 'price', 'total_price', 'calculated_price', 'amount', 'cost'];
-        
-        for (const field of priceFields) {
-          if (response.data[field] !== undefined && response.data[field] !== null) {
-            let fieldValue = response.data[field];
-            
-            if (typeof fieldValue === 'object' && fieldValue.value !== undefined) {
-              fieldValue = fieldValue.value;
-            }
-            
-            const numericValue = typeof fieldValue === 'string' ? 
-              parseFloat(fieldValue.replace(/[^\d.-]/g, '')) : Number(fieldValue);
-            
-            if (!isNaN(numericValue) && numericValue >= 0) {
-              extractedPrice = numericValue;
-              console.log(`✅ Found valid price in field '${field}':`, extractedPrice);
-              break;
-            }
-          }
-        }
-      }
-      
-      if (extractedPrice !== null) {
-        setCurrentPrice(extractedPrice);
-      } else {
-        throw new Error('Invalid price response format');
-      }
-      
-    } catch (error) {
-      console.log('Price API failed, calculating fallback price:', error.message);
-      
-      // Enhanced fallback calculation with metal multiplier
-      const baseProductPrice = product.price || product.base_price || basePrice || 1000;
-      const caratMultiplier = Math.pow(parseFloat(selectedCarat.carat_weight), 1.5);
-      const metalMultiplier = metalOptions.find(m => m.value === selectedMetal)?.multiplier || 1.0;
-      const fallbackPrice = Math.round(baseProductPrice * caratMultiplier * metalMultiplier);
-      
-      console.log('Fallback price calculation:', {
-        base: baseProductPrice,
-        caratWeight: selectedCarat.carat_weight,
-        caratMultiplier,
-        metalMultiplier,
-        final: fallbackPrice
-      });
-      
-      setCurrentPrice(fallbackPrice);
-    } finally {
-      setPriceLoading(false);
-    }
-  }, [product, uniqueCarats, selectedMetal, selectedColor, selectedSize, id, basePrice]);
+    const unique = Array.from(caratMap.values());
+    const sorted = unique.sort((a, b) => parseFloat(a.carat_weight) - parseFloat(b.carat_weight));
+    
 
-  // Debounced price calculation
-  useEffect(() => {
-    if (uniqueCarats.length > 0) {
-      const timeoutId = setTimeout(() => {
-        calculatePrice(selectedCaratIndex);
-      }, 300); // 300ms debounce to prevent flickering
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [selectedCaratIndex, selectedMetal, selectedColor, selectedSize, calculatePrice]);
+    return sorted;
+  }, [availableCarats]);
 
   // Fetch product data
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!id) return;
+      
+  
+      setLoading(true);
       try {
-        setLoading(true);
-        setError(null);
+        // Use API utility function
+        const response = await getProduct(id);
+        console.log('✅ Product data received:', response.data);
         
-        const response = await axios.get(`/products/${id}`);
         const productData = response.data;
         
-        console.log('Product data:', productData);
+        console.log('✅ Product data loaded:', productData);
+        console.log('Available carats raw:', productData.available_carats);
+        console.log('Available carats length:', productData.available_carats?.length);
         
         setProduct(productData);
         setBasePrice(productData.price || productData.base_price || 0);
         
-        if (productData.carat_pricing && Array.isArray(productData.carat_pricing)) {
-          setAvailableCarats(productData.carat_pricing);
+        if (productData.available_carats && Array.isArray(productData.available_carats)) {
+          console.log('✅ Setting available carats:', productData.available_carats.length);
+          setAvailableCarats(productData.available_carats);
+        } else {
+          console.log('❌ No available_carats found or not an array:', productData.available_carats);
+        }
+        
+        // Fetch related products from the same category
+        if (productData.category_id) {
+          try {
+            const relatedResponse = await axios.get(`/api/products?category_id=${productData.category_id}&limit=8&exclude=${id}`);
+            setRelatedProducts(relatedResponse.data.filter(p => p.id !== parseInt(id)) || []);
+          } catch (relatedError) {
+            console.error('Error fetching related products:', relatedError);
+          }
         }
         
       } catch (error) {
-        console.error('Error fetching product:', error);
-        setError('שגיאה בטעינת המוצר');
-        toast.error('שגיאה בטעינת המוצר');
+        console.error('❌ All API attempts failed:', error);
+        setError(`שגיאה בטעינת המוצר: ${error.message}`);
       } finally {
         setLoading(false);
       }
     };
-    
-    if (id) {
-      fetchProduct();
-    }
+
+    fetchProduct();
   }, [id]);
 
   // Initialize price when carats are loaded
   useEffect(() => {
     if (uniqueCarats.length > 0 && currentPrice === 0) {
-      calculatePrice(0);
+      // Price will be calculated by the main price calculation useEffect
+      console.log('Carats loaded, price calculation will trigger automatically');
     }
-  }, [uniqueCarats, currentPrice, calculatePrice]);
+  }, [uniqueCarats, currentPrice]);
 
   const handleCaratChange = useCallback((newIndex) => {
     if (newIndex !== selectedCaratIndex && newIndex >= 0 && newIndex < uniqueCarats.length) {
@@ -283,6 +208,82 @@ const ProductDetailSlider = () => {
     }
   };
 
+  // Calculate price with debouncing  
+  useEffect(() => {
+    const calculatePrice = async () => {
+      if (!product || selectedCaratIndex === null || !uniqueCarats[selectedCaratIndex]) return;
+      
+      const selectedCarat = uniqueCarats[selectedCaratIndex];
+      console.log('Calculating price for carat:', selectedCarat.carat_weight);
+      
+      setPriceLoading(true);
+      try {
+        // Use API utility function
+        const response = await getProductPrice(id, selectedCarat.carat_weight);
+        
+        console.log('✅ Full API Response:', response);
+        
+        // Enhanced response parsing with multiple field checks
+        let extractedPrice = null;
+        
+        if (response.data) {
+          const priceFields = ['final_price', 'price', 'total_price', 'calculated_price', 'amount', 'cost'];
+          
+          for (const field of priceFields) {
+            if (response.data[field] !== undefined && response.data[field] !== null) {
+              let fieldValue = response.data[field];
+              
+              if (typeof fieldValue === 'object' && fieldValue.value !== undefined) {
+                fieldValue = fieldValue.value;
+              }
+              
+              const numericValue = typeof fieldValue === 'string' ? 
+                parseFloat(fieldValue.replace(/[^\d.-]/g, '')) : Number(fieldValue);
+              
+              if (!isNaN(numericValue) && numericValue >= 0) {
+                extractedPrice = numericValue;
+                console.log(`✅ Found valid price in field '${field}':`, extractedPrice);
+                break;
+              }
+            }
+          }
+        }
+        
+        if (extractedPrice !== null) {
+          setCurrentPrice(extractedPrice);
+        } else {
+          throw new Error('Invalid price response format');
+        }
+        
+      } catch (error) {
+        console.error('❌ Price calculation failed:', error);
+        // Enhanced fallback calculation with metal multiplier
+        const baseProductPrice = product.price || product.base_price || basePrice || 1000;
+        const caratMultiplier = Math.pow(parseFloat(selectedCarat.carat_weight), 1.5);
+        const metalMultiplier = metalOptions.find(m => m.value === selectedMetal)?.multiplier || 1.0;
+        const fallbackPrice = Math.round(baseProductPrice * caratMultiplier * metalMultiplier);
+        
+        console.log('Fallback price calculation:', {
+          base: baseProductPrice,
+          caratWeight: selectedCarat.carat_weight,
+          caratMultiplier,
+          metalMultiplier,
+          final: fallbackPrice
+        });
+        
+        setCurrentPrice(fallbackPrice);
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      calculatePrice();
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [selectedCaratIndex, uniqueCarats, selectedMetal, selectedColor, selectedSize, id, basePrice, product]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-stone-100 flex items-center justify-center">
@@ -315,241 +316,190 @@ const ProductDetailSlider = () => {
   const originalPrice = currentPrice * 1.2; // 20% higher as original price
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-stone-50 to-amber-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       <PageSEO 
         title={`${product.name} - DiamondLab Store`}
         description={product.description}
         image={product.image_url}
       />
       
-      <div className="container mx-auto px-4 py-6 lg:py-12">
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-sm text-slate-600 mb-6 bg-white/60 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm w-fit">
-          <Link to="/" className="hover:text-amber-600 transition-colors">בית</Link>
-          <ChevronLeft className="w-4 h-4" />
-          <Link to="/products" className="hover:text-amber-600 transition-colors">מוצרים</Link>
-          <ChevronLeft className="w-4 h-4" />
-          <span className="text-slate-900 font-medium">{product.name}</span>
+      <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb Navigation - Simple */}
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
+          <Link to="/" className="hover:text-gray-900">עמוד הבית</Link>
+          <span>/</span>
+          <Link to="/products" className="hover:text-gray-900">קולקציות</Link>
+          <span>/</span>
+          <Link to="/products" className="hover:text-gray-900">קולקציות</Link>
+          <span>/</span>
+          <span className="text-gray-900 font-medium">LUMINA / ILUMA DUO</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
-          <div className="relative">
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
-              <ProductImageGallery 
-                images={product.images || [{ url: product.image_url, alt: product.name }]} 
-              />
-              
-              {/* Quality Badges */}
-              <div className="absolute top-6 right-6 flex flex-col gap-3">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                  <Award className="w-5 h-5 text-amber-600" />
-                </div>
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                  <Diamond className="w-5 h-5 text-blue-600" />
-                </div>
-              </div>
-            </div>
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <ProductImageGallery 
+              images={product.images || [{ url: product.image_url, alt: product.name }]} 
+            />
           </div>
 
           {/* Product Details */}
           <div className="space-y-6">
-            {/* Header */}
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <h1 className="text-3xl lg:text-4xl font-light text-slate-900 leading-tight">
-                  {product.name}
-                </h1>
+            {/* Product Title */}
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                ILUMA DUO
+              </h1>
+              <p className="text-lg text-gray-600">
+                בחר/י את צבע התכשיטים
+              </p>
+            </div>
+
+            {/* Metal Selection */}
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <div className="flex justify-center gap-4 mb-4">
                 <button
-                  onClick={handleToggleFavorite}
-                  className="p-3 rounded-full hover:bg-slate-100 transition-colors"
+                  onClick={() => setSelectedMetal('14k')}
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                    selectedMetal === '14k'
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
                 >
-                  <Heart 
-                    className={`w-6 h-6 ${isFavorite(product.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} 
-                  />
+                  14K
+                </button>
+                <button
+                  onClick={() => setSelectedMetal('14k')}
+                  className="px-6 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  14K
+                </button>
+                <button
+                  onClick={() => setSelectedMetal('14k')}
+                  className="px-6 py-3 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  14K
                 </button>
               </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
+            </div>
+
+            {/* Product Specifications */}
+            <div className="space-y-4">
+              {/* Carat */}
+              <div className="flex items-center justify-between py-3 border-b">
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-yellow-500" />
+                  <span className="text-gray-700">קראט:</span>
                 </div>
-                <span className="text-slate-600 font-light">(127 ביקורות)</span>
+                <span className="font-semibold text-gray-900">
+                  {selectedCarat ? `CT ${parseFloat(selectedCarat.carat_weight).toFixed(2)}` : 'CT 1.00'}
+                </span>
+              </div>
+
+              {/* Clarity */}
+              <div className="flex items-center justify-between py-3 border-b">
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-yellow-500" />
+                  <span className="text-gray-700">ניקיון:</span>
+                </div>
+                <span className="font-semibold text-gray-900">
+                  {product.clarity_grade || 'VS1'}
+                </span>
+              </div>
+
+              {/* Color */}
+              <div className="flex items-center justify-between py-3 border-b">
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-yellow-500" />
+                  <span className="text-gray-700">צבע:</span>
+                </div>
+                <span className="font-semibold text-gray-900">
+                  {product.color_grade || 'D-E'}
+                </span>
               </div>
             </div>
 
-            {/* Carat Weight Selection - Now Clearly Visible */}
+            {/* Carat Selection - Keep functionality */}
             {uniqueCarats.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium text-slate-900">בחירת קראט</h3>
-                
-                <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {uniqueCarats.map((carat, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleCaratChange(index)}
-                        className={`px-3 py-2 rounded-lg border-2 text-center transition-all duration-300 ${
-                          index === selectedCaratIndex
-                            ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
-                            : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className={`text-sm font-medium ${
-                          index === selectedCaratIndex ? 'text-teal-900' : 'text-slate-700'
-                        }`}>
-                          {parseFloat(carat.carat_weight).toFixed(2)}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Metal & Color Selection - Ultra Compact Design */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium text-slate-900">
-                מתכת : {selectedMetal} {selectedColor}
-              </h3>
-              
-              <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
-                <div className="flex items-center justify-between">
-                  {/* Color Selection - Left Side */}
-                  <div className="flex items-center gap-3">
-                    {ringColors.map((color) => (
-                      <button
-                        key={color.value}
-                        onClick={() => setSelectedColor(color.name)}
-                        className={`w-10 h-10 rounded-full border-3 transition-all duration-300 ${
-                          selectedColor === color.name
-                            ? 'border-slate-600 scale-110 shadow-lg'
-                            : 'border-slate-200 hover:border-slate-400'
-                        }`}
-                        style={{ backgroundColor: color.color }}
-                        title={color.name}
-                      />
-                    ))}
-                  </div>
-                  
-                  <div className="w-px h-8 bg-slate-200" />
-                  
-                  {/* Metal Options - Right Side */}
-                  <div className="flex items-center gap-6">
-                    {metalOptions.map((metal) => (
-                      <button
-                        key={metal.value}
-                        onClick={() => setSelectedMetal(metal.value)}
-                        className={`text-xl font-light transition-all duration-300 ${
-                          selectedMetal === metal.value
-                            ? 'text-teal-500 border-b-2 border-teal-500 pb-1'
-                            : 'text-slate-400 hover:text-slate-600'
-                        }`}
-                      >
-                        {metal.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Ring Size Selection - Minimal Design */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium text-slate-900">מידת טבעת : {selectedSize}</h3>
-              
-              <div className="bg-white rounded-xl p-4 shadow-lg border border-slate-200">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {ringSizes.map((size) => (
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 text-center">
+                  בחירת קראט ({uniqueCarats.length} אפשרויות)
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {uniqueCarats.map((carat, index) => (
                     <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all duration-300 ${
-                        selectedSize === size
-                          ? 'border-teal-400 bg-teal-50 text-teal-900 shadow-md scale-105'
-                          : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      key={index}
+                      onClick={() => handleCaratChange(index)}
+                      className={`px-4 py-3 rounded-lg border-2 text-center transition-all ${
+                        index === selectedCaratIndex
+                          ? 'border-teal-500 bg-teal-50 text-teal-900'
+                          : 'border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      {size}
+                      <div className="font-semibold">
+                        {parseFloat(carat.carat_weight).toFixed(2)}
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Price Display */}
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 shadow-lg border border-amber-200">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-4">
-                    <div className={`text-2xl font-light text-slate-900 transition-all duration-500 ${
-                      priceLoading ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
-                    }`}>
-                      <AnimatedPrice value={currentPrice} />
-                    </div>
-                    {originalPrice > currentPrice && (
-                      <div className="text-lg text-slate-500 line-through">
-                        ₪{originalPrice.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="text-slate-600 font-light text-sm">
-                    כולל מע"ם ומשלוח חינם
-                  </div>
-                  
-                  {selectedCarat && (
-                    <div className="text-xs text-slate-500">
-                      קראט: {parseFloat(selectedCarat.carat_weight).toFixed(2)} | 
-                      מתכת: {selectedMetal} | 
-                      צבע: {selectedColor} | 
-                      מידה: {selectedSize}
-                    </div>
-                  )}
-                </div>
-                
-                {priceLoading && (
-                  <div className="flex items-center justify-center w-10 h-10 bg-amber-200 rounded-full">
-                    <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
+            <div className="text-center py-6">
+              <div className="text-sm text-gray-600 mb-2">נבקש</div>
+              <div className="text-4xl font-bold text-gray-900">
+                <AnimatedPrice value={currentPrice || 7950} />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={uniqueCarats.length === 0 || priceLoading}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-full font-medium hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                הוסף לעגלה
-              </button>
-              
-              <button className="sm:w-auto bg-slate-900 text-white px-6 py-3 rounded-full font-medium hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                קנה עכשיו
-              </button>
-            </div>
+            {/* Add to Cart Button */}
+            <button
+              onClick={handleAddToCart}
+              disabled={uniqueCarats.length === 0 || priceLoading}
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-lg font-medium text-lg transition-colors disabled:opacity-50"
+            >
+              הוספה לסל
+            </button>
+          </div>
+        </div>
 
-            {/* Trust Indicators */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Shield, title: 'אחריות לכל החיים', color: 'text-green-600', bg: 'bg-green-50' },
-                { icon: Truck, title: 'משלוח חינם', color: 'text-blue-600', bg: 'bg-blue-50' },
-                { icon: RotateCcw, title: 'החזרה 30 יום', color: 'text-purple-600', bg: 'bg-purple-50' }
-              ].map((feature, index) => (
-                <div key={index} className={`${feature.bg} rounded-lg p-3 text-center transition-all duration-300 hover:shadow-md hover:scale-105`}>
-                  <feature.icon className={`w-5 h-5 ${feature.color} mx-auto mb-1`} />
-                  <div className="text-xs font-medium text-slate-700">{feature.title}</div>
-                </div>
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-light text-gray-900">עוד מהקטגוריה</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {relatedProducts.slice(0, 8).map((relatedProduct) => (
+                <Link
+                  key={relatedProduct.id}
+                  to={`/products/${relatedProduct.id}`}
+                  className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100"
+                >
+                  <div className="aspect-square overflow-hidden bg-gray-50">
+                    <ProductImageGallery 
+                      images={relatedProduct.images || relatedProduct.image_url} 
+                      productName={relatedProduct.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      showNavigation={false}
+                    />
+                  </div>
+                  
+                  <div className="p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
+                      {relatedProduct.name}
+                    </h3>
+                    <div className="text-lg font-semibold text-gray-900">
+                      ₪{(relatedProduct.price || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

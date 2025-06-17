@@ -17,7 +17,7 @@ const Categories = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/categories');
+      const response = await axios.get('/api/categories');
       setCategories(response.data.filter(cat => cat.is_active));
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -176,8 +176,8 @@ const Categories = () => {
           .hero-banner {
             position: relative;
             height: 300px;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.8), rgba(184, 134, 11, 0.9)), 
-                        url('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+            background: 
+                        url('/CategoriesImage.png');
             background-size: cover;
             background-position: center;
             display: flex;

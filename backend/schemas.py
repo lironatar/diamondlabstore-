@@ -30,6 +30,7 @@ class CategoryBase(BaseModel):
     name: str
     description: Optional[str] = None
     image_url: Optional[str] = None
+    hero_image_url: Optional[str] = None
 
 class CategoryCreate(CategoryBase):
     pass

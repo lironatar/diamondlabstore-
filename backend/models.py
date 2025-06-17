@@ -23,6 +23,7 @@ class Category(Base):
     name = Column(String, nullable=False, index=True)
     description = Column(Text, nullable=True)
     image_url = Column(String, nullable=True)
+    hero_image_url = Column(String, nullable=True)  # New field for hero images
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
